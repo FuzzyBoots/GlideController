@@ -87,11 +87,13 @@ namespace FS_ThirdPerson
 
                     var animatorController = prefabPlayer.GetComponent<Animator>().runtimeAnimatorController as AnimatorController;
 
-                    Debug.Log("Before merge");
+                    Debug.Log($"Before merge, Player is {prefabPlayer} and animator is {animatorController}");
                     animatorMergerUtility.MergeAnimatorControllers(animatorController);
                     Debug.Log("After merge");
                     // Get all components from the prefab
                     Component[] components = prefabPlayer.GetComponents<Component>();
+
+                    Debug.Log($"Found {components.Length} components");
 
                     foreach (Component sourceComp in components)
                     {
@@ -101,7 +103,7 @@ namespace FS_ThirdPerson
 
                         System.Type type = sourceComp.GetType();
                         Component targetComp = playerObj.GetComponent(type);
-                        Debug.Log($"Type: {type} Target: {targetComp.name}");
+                        Debug.Log($"Type: {type} Target: {(targetComp ? targetComp.name : targetComp)}");
                         if (targetComp == null)
                         {
                             targetComp = playerObj.AddComponent(type);
