@@ -41,10 +41,29 @@ public class GliderController2 : SystemBase
     [SerializeField] Animator _animator;
     private Vector3 forwardLandForceMultiplier;
 
+    [Header("Gliding Turning Physics")]
+    [Tooltip("How quickly the glider rolls into a turn. Higher is more responsive.")]
+    [SerializeField] private float _turnSpeed = 2.5f;
+
+    [Tooltip("The maximum angle in degrees the glider can bank.")]
+    [SerializeField] private float _maxRollAngle = 40f;
+
+    [Tooltip("How much yaw (turning) is applied based on the roll. Higher makes for sharper turns.")]
+    [SerializeField] private float _yawFromRoll = 0.8f;
+
+    [Tooltip("How quickly the glider stabilizes and levels out with no input.")]
+    [SerializeField] private float _rollDampening = 3f;
+
+    // We need a variable to track the current roll angle
+    private float _currentRoll = 0f;
+
+    [Header("Gliding Speed")]
+    [SerializeField] private float _maxGlideSpeed = 25f;
+
+    [Header("Ragdoll Paramters")]
     [Tooltip("The amount of force applied to the legs to make them sway when turning.")]
     public float legSwayFactor = 50f;
 
-    [Header("Ragdoll Components")]
     [Tooltip("The Rigidbody components of the character's legs (thighs and calves).")]
     public Rigidbody[] legRigidbodies;
 
@@ -103,13 +122,12 @@ public class GliderController2 : SystemBase
 
     private void HandleGlidingMovement()
     {
-        Debug.Log("Gliding?");
         float difference = 0;
 
         // Apply drag
         _velocityVector -= _parachuteDrag * Time.deltaTime * _velocityVector;
 
-        // If y velocity is falling faster than the max, we'll set it to _fallSpeed.
+        // If y velocity is falling faster than the max, clamp it to _fallSpeed.
         float ySpeed = _velocityVector.y + player.Gravity * Time.deltaTime;
         if (ySpeed < _fallSpeed)
         {
@@ -118,18 +136,34 @@ public class GliderController2 : SystemBase
         }
         _velocityVector.y = ySpeed;
 
-        // The difference will be applied to our forward movement
-        Vector3 _forwardMovement = transform.forward;
-        _forwardMovement.y = 0;
-        _forwardMovement = _forwardMovement.normalized * difference;
-
-        _velocityVector += _forwardMovement;
-
-        // We'll allow some rotation left and right?
         float h = locomotionInput.DirectionInput.x;
-        transform.Rotate(0, h * _rotationSpeed * Time.deltaTime, 0);
 
-        Debug.Log("Should be moving by " + _velocityVector);
+        // Determine the target roll angle from player input
+        float targetRoll = -h * _maxRollAngle;
+
+        // Smoothly interpolate to the target roll for a fluid motion
+        _currentRoll = Mathf.Lerp(_currentRoll, targetRoll, _turnSpeed * Time.deltaTime);
+
+        // Apply dampening to level out automatically when there is no input
+        if (Mathf.Approximately(h, 0f))
+        {
+            _currentRoll = Mathf.Lerp(_currentRoll, 0f, _rollDampening * Time.deltaTime);
+        }
+
+        // Calculate the yaw rotation based on how much we are currently rolled
+        float yawChange = -_currentRoll * _yawFromRoll * Time.deltaTime;
+
+        // Apply the final rotations
+        // Yaw is applied in world space to turn the character horizontally.
+        // Roll is applied in local space to bank the character model.
+        transform.Rotate(0, yawChange, 0, Space.World);
+        transform.localRotation = Quaternion.Euler(transform.localEulerAngles.x, transform.localEulerAngles.y, _currentRoll);
+
+        // Convert the potential energy difference into forward thrust
+        Vector3 forwardThrust = transform.forward * difference;
+        _velocityVector += forwardThrust;
+
+        // Apply the final calculated movement to the CharacterController
         characterController.Move(_velocityVector * Time.deltaTime);
     }
 
@@ -159,6 +193,32 @@ public class GliderController2 : SystemBase
         Gizmos.DrawRay(transform.TransformPoint(groundCheckOffset), Vector3.down * groundCheckRadius);
     }
 
+    private IEnumerator LevelOutRotation()
+    {
+        // The duration for the leveling out animation
+        float time = 0;
+        float duration = 0.25f; // A quarter of a second to level out
+
+        // Capture the roll angle when we start landing
+        float startingRoll = _currentRoll;
+
+        while (time < duration)
+        {
+            // Calculate the new roll by smoothly interpolating from our starting roll to zero
+            _currentRoll = Mathf.Lerp(startingRoll, 0f, time / duration);
+
+            // Update the character's local rotation to reflect the change
+            transform.localRotation = Quaternion.Euler(transform.localEulerAngles.x, transform.localEulerAngles.y, _currentRoll);
+
+            time += Time.deltaTime;
+            yield return null; // Wait for the next frame
+        }
+
+        // After the loop, snap to a perfect zero roll to ensure it's correct
+        _currentRoll = 0f;
+        transform.localRotation = Quaternion.Euler(transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
+    }
+
     private IEnumerator StopGliding()
     {
         if (!InAction) { yield return null; }
@@ -167,6 +227,9 @@ public class GliderController2 : SystemBase
         _floatObject.SetActive(false);
         Debug.Log("Setting Gliding to false");
         _animator.SetBool("Gliding", false);
+
+        // Call the new coroutine to handle leveling out the character
+        StartCoroutine(LevelOutRotation());
 
         // StartCoroutine(HandleLandingMomentum());
         player.OnEndSystem(this);
