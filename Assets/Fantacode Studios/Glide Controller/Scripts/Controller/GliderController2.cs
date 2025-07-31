@@ -62,6 +62,12 @@ public class GliderController2 : SystemBase
 
     public void Update()
     {
+//#if inputsystem
+//            GlideInputHolding = input.Gliding.Gliding.inProgress;
+//#else
+//        var grapplingInput = Input.GetKey(glideInput) || (!string.IsNullOrEmpty(glideInputButton) && Input.GetButton(glideInputButton));
+//#endif
+
         GlideInputHolding = Input.GetKeyDown(KeyCode.Space);
     }
 
@@ -91,7 +97,6 @@ public class GliderController2 : SystemBase
         else if (InAction && !HighEnough())
         {
             Debug.Log("Not High Enough");
-            // Debug.Break();
             StartCoroutine(StopGliding());
         }
     }
@@ -217,6 +222,8 @@ public class GliderController2 : SystemBase
     #region rootmotion
 
     bool prevRootMotionVal;
+    private string glideInputButton;
+    private KeyCode glideInput;
 
     public void EnableRootMotion()
     {
@@ -265,7 +272,7 @@ public class GliderController2 : SystemBase
 
     bool CheckGround()
     {
-        return Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius);
+        return Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), this.groundCheckDistance, groundLayer);
     }
 
     #endregion

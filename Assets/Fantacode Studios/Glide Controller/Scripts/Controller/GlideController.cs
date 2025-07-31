@@ -8,7 +8,7 @@ namespace SD_GlidingSystem
 {
     public class GlideController : EquippableSystemBase
     {
-        bool enableGlide = false;
+        [SerializeField] bool enableGlide = false;
         public bool InAction { get; private set; }
         public override SystemState State { get; } = SystemState.Gliding;
         public override List<Type> EquippableItems => new List<Type>() { typeof(GliderItem) };

@@ -75,35 +75,29 @@ namespace FS_ThirdPerson
         /// </summary>
         public GameObject CopyComponentsAndAnimControllerFromPrefab(string prefabName, AnimatorMergerUtility animatorMergerUtility, GameObject playerObj)
         {
-            Debug.Log($"Entering Copy function for {prefabName}");
             if (!string.IsNullOrEmpty(prefabName))
             {
                 // Load the prefab from Resources
                 GameObject prefab = Resources.Load<GameObject>(prefabName);
-                Debug.Log("Got past the load. Prefab is " + prefab);
+
                 if (prefab != null)
                 {
                     var prefabPlayer = prefab.GetComponentInChildren<PlayerController>().gameObject;
 
                     var animatorController = prefabPlayer.GetComponent<Animator>().runtimeAnimatorController as AnimatorController;
 
-                    Debug.Log($"Before merge, Player is {prefabPlayer} and animator is {animatorController}");
                     animatorMergerUtility.MergeAnimatorControllers(animatorController);
-                    Debug.Log("After merge");
                     // Get all components from the prefab
                     Component[] components = prefabPlayer.GetComponents<Component>();
 
-                    Debug.Log($"Found {components.Length} components");
-
                     foreach (Component sourceComp in components)
                     {
-                        Debug.Log($"Handling Component {sourceComp.name}");
                         Type componentType = sourceComp.GetType(); 
                         if (playerObj.GetComponent(componentType) != null) continue; 
 
                         System.Type type = sourceComp.GetType();
                         Component targetComp = playerObj.GetComponent(type);
-                        Debug.Log($"Type: {type} Target: {(targetComp ? targetComp.name : targetComp)}");
+
                         if (targetComp == null)
                         {
                             targetComp = playerObj.AddComponent(type);

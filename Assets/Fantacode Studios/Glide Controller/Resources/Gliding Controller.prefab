@@ -757,6 +757,7 @@ GameObject:
   - component: {fileID: 6626806317791873919}
   - component: {fileID: 8961181310551414655}
   - component: {fileID: 5282165639278203864}
+  - component: {fileID: 7785224735817522124}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -1029,11 +1030,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5461086701115480959}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d7775ec3943d9d64589c6ab5252cd094, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableGlide: 0
   _floatObject: {fileID: 7381148350791537148}
   groundCheckRadius: 0.7
   groundCheckDistance: 2
@@ -1049,6 +1051,33 @@ MonoBehaviour:
   glideReleaseInput: 32
   glideInputButton: 
   glideReleaseInputButton: 
+--- !u!114 &7785224735817522124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5461086701115480959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c91d8bece9c2f084db83af231007d2be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableGlide: 1
+  _floatObject: {fileID: 0}
+  groundCheckRadius: 0.7
+  groundCheckDistance: 2
+  groundCheckOffset: {x: 0, y: 0.15, z: 0.07}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  _velocityVector: {x: 0, y: 0, z: 0}
+  _parachuteDrag: 0.1
+  _rotationSpeed: 180
+  _fallSpeed: -0.2
+  _animator: {fileID: 0}
+  legSwayFactor: 50
+  legRigidbodies: []
 --- !u!1 &5464243126050064263
 GameObject:
   m_ObjectHideFlags: 0
@@ -1625,7 +1654,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7161185608331628982
 RectTransform:
   m_ObjectHideFlags: 0
