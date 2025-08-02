@@ -54,6 +54,29 @@ public class GliderController2 : SystemBase
     [Tooltip("How quickly the glider stabilizes and levels out with no input.")]
     [SerializeField] private float _rollDampening = 3f;
 
+    [Header("Gliding Pitching Physics")]
+    [Header("Gliding Pitch Control")]
+    [Tooltip("How quickly the glider pitches forward or backward.")]
+    [SerializeField] private float _pitchSpeed = 2.5f;
+
+    [Tooltip("The maximum angle in degrees the glider can pitch down (dive).")]
+    [SerializeField] private float _maxPitchAngle = 30f;
+
+    [Tooltip("The maximum angle in degrees the glider can pitch up.")]
+    [SerializeField] private float _minPitchAngle = -20f;
+
+    [Tooltip("How much extra forward speed is gained when diving.")]
+    [SerializeField] private float _speedBoostFromPitch = 5f;
+
+    [Tooltip("How much lift (reduced fall speed) is generated when pitching up.")]
+    [SerializeField] private float _liftFromPitch = 2f;
+
+    [Tooltip("How quickly the glider's pitch stabilizes with no input.")]
+    [SerializeField] private float _pitchDampening = 3f;
+
+    // We need a variable to track the current pitch angle
+    private float _currentPitch = 0f;
+
     // We need a variable to track the current roll angle
     private float _currentRoll = 0f;
 
@@ -127,8 +150,29 @@ public class GliderController2 : SystemBase
         // Apply drag
         _velocityVector -= _parachuteDrag * Time.deltaTime * _velocityVector;
 
-        // If y velocity is falling faster than the max, clamp it to _fallSpeed.
+        // --- PITCH CALCULATIONS (NEW) ---
+        float v = locomotionInput.DirectionInput.y; // Get vertical input
+
+        // Determine the target pitch angle from player input
+        // Positive 'v' (W key) pitches down, negative 'v' (S key) pitches up
+        float targetPitch = v > 0 ? v * _maxPitchAngle : v * -_minPitchAngle;
+
+        // Smoothly interpolate to the target pitch
+        _currentPitch = Mathf.Lerp(_currentPitch, targetPitch, _pitchSpeed * Time.deltaTime);
+
+        // Apply dampening to level out pitch automatically when there is no input
+        if (Mathf.Approximately(v, 0f))
+        {
+            _currentPitch = Mathf.Lerp(_currentPitch, 0f, _pitchDampening * Time.deltaTime);
+        }
+
+        // --- VERTICAL SPEED & LIFT ---
+        // Calculate how pitch affects lift. Pitching up (_currentPitch < 0) reduces fall speed.
+        float pitchToLift = (_currentPitch < 0) ? (_currentPitch / _minPitchAngle) * _liftFromPitch : 0;
+
         float ySpeed = _velocityVector.y + player.Gravity * Time.deltaTime;
+        ySpeed += pitchToLift * Time.deltaTime; // Apply lift
+
         if (ySpeed < _fallSpeed)
         {
             difference = _fallSpeed - ySpeed;
@@ -136,32 +180,38 @@ public class GliderController2 : SystemBase
         }
         _velocityVector.y = ySpeed;
 
+        // --- ROLL & YAW CALCULATIONS (EXISTING) ---
         float h = locomotionInput.DirectionInput.x;
-
-        // Determine the target roll angle from player input
         float targetRoll = -h * _maxRollAngle;
-
-        // Smoothly interpolate to the target roll for a fluid motion
         _currentRoll = Mathf.Lerp(_currentRoll, targetRoll, _turnSpeed * Time.deltaTime);
-
-        // Apply dampening to level out automatically when there is no input
         if (Mathf.Approximately(h, 0f))
         {
             _currentRoll = Mathf.Lerp(_currentRoll, 0f, _rollDampening * Time.deltaTime);
         }
-
-        // Calculate the yaw rotation based on how much we are currently rolled
         float yawChange = -_currentRoll * _yawFromRoll * Time.deltaTime;
 
-        // Apply the final rotations
-        // Yaw is applied in world space to turn the character horizontally.
-        // Roll is applied in local space to bank the character model.
+        // --- APPLY ROTATIONS (MODIFIED) ---
+        // Yaw is applied in world space to turn the character.
+        // Pitch and Roll are applied in local space to bank and tilt the character model.
         transform.Rotate(0, yawChange, 0, Space.World);
-        transform.localRotation = Quaternion.Euler(transform.localEulerAngles.x, transform.localEulerAngles.y, _currentRoll);
+        transform.localRotation = Quaternion.Euler(_currentPitch, transform.localEulerAngles.y, _currentRoll);
 
-        // Convert the potential energy difference into forward thrust
-        Vector3 forwardThrust = transform.forward * difference;
+        // --- FORWARD THRUST & SPEED BOOST (MODIFIED) ---
+        // Calculate speed boost from pitching down (_currentPitch > 0)
+        float pitchToSpeed = (_currentPitch > 0) ? (_currentPitch / _maxPitchAngle) * _speedBoostFromPitch : 0;
+
+        // Convert potential energy (from clamped fall speed) and pitch dive into forward thrust
+        Vector3 forwardThrust = transform.forward * (difference + pitchToSpeed);
         _velocityVector += forwardThrust;
+
+        // Clamp the horizontal speed to the maximum glide speed
+        Vector3 horizontalVelocity = new Vector3(_velocityVector.x, 0, _velocityVector.z);
+        if (horizontalVelocity.magnitude > _maxGlideSpeed)
+        {
+            horizontalVelocity = horizontalVelocity.normalized * _maxGlideSpeed;
+            _velocityVector.x = horizontalVelocity.x;
+            _velocityVector.z = horizontalVelocity.z;
+        }
 
         // Apply the final calculated movement to the CharacterController
         characterController.Move(_velocityVector * Time.deltaTime);
@@ -195,28 +245,30 @@ public class GliderController2 : SystemBase
 
     private IEnumerator LevelOutRotation()
     {
-        // The duration for the leveling out animation
         float time = 0;
         float duration = 0.25f; // A quarter of a second to level out
 
-        // Capture the roll angle when we start landing
+        // Capture the pitch and roll angles when we start landing
         float startingRoll = _currentRoll;
+        float startingPitch = _currentPitch;
 
         while (time < duration)
         {
-            // Calculate the new roll by smoothly interpolating from our starting roll to zero
+            // Smoothly interpolate both roll and pitch from their starting angles to zero
             _currentRoll = Mathf.Lerp(startingRoll, 0f, time / duration);
+            _currentPitch = Mathf.Lerp(startingPitch, 0f, time / duration);
 
             // Update the character's local rotation to reflect the change
-            transform.localRotation = Quaternion.Euler(transform.localEulerAngles.x, transform.localEulerAngles.y, _currentRoll);
+            transform.localRotation = Quaternion.Euler(_currentPitch, transform.localEulerAngles.y, _currentRoll);
 
             time += Time.deltaTime;
             yield return null; // Wait for the next frame
         }
 
-        // After the loop, snap to a perfect zero roll to ensure it's correct
+        // After the loop, snap to a perfect zero rotation to ensure it's correct
         _currentRoll = 0f;
-        transform.localRotation = Quaternion.Euler(transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
+        _currentPitch = 0f;
+        transform.localRotation = Quaternion.Euler(0f, transform.localEulerAngles.y, 0f);
     }
 
     private IEnumerator StopGliding()
@@ -335,7 +387,7 @@ public class GliderController2 : SystemBase
 
     bool CheckGround()
     {
-        return Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), this.groundCheckDistance, groundLayer);
+        return Physics.SphereCast(transform.TransformPoint(groundCheckOffset), groundCheckRadius, Vector3.down, out _, groundCheckDistance, groundLayer);
     }
 
     #endregion
