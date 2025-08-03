@@ -3872,7 +3872,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   _velocityVector: {x: 0, y: 0, z: 0}
-  _parachuteDrag: 0.8
+  _parachuteDrag: 0.4
   _rotationSpeed: 45
   _fallSpeed: -0.5
   _animator: {fileID: 0}
@@ -3880,6 +3880,14 @@ MonoBehaviour:
   _maxRollAngle: 40
   _yawFromRoll: 0.8
   _rollDampening: 3
+  _pitchSpeed: 2.5
+  _maxPitchAngle: 30
+  _minPitchAngle: -20
+  _speedBoostFromPitch: 5
+  _liftFromPitch: 0.8
+  _forwardMomentumCost: 0.9
+  _pitchDampening: 3
+  _maxGlideSpeed: 250
   legSwayFactor: 50
   legRigidbodies: []
 --- !u!1 &1434367765

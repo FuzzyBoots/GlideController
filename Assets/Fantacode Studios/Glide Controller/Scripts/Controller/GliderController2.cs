@@ -54,7 +54,6 @@ public class GliderController2 : SystemBase
     [Tooltip("How quickly the glider stabilizes and levels out with no input.")]
     [SerializeField] private float _rollDampening = 3f;
 
-    [Header("Gliding Pitching Physics")]
     [Header("Gliding Pitch Control")]
     [Tooltip("How quickly the glider pitches forward or backward.")]
     [SerializeField] private float _pitchSpeed = 2.5f;
@@ -70,6 +69,9 @@ public class GliderController2 : SystemBase
 
     [Tooltip("How much lift (reduced fall speed) is generated when pitching up.")]
     [SerializeField] private float _liftFromPitch = 2f;
+
+    [Tooltip("How much forward speed is lost to generate lift when pulling up. >1 is a net loss.")]
+    [SerializeField] private float _forwardMomentumCost = 1.2f;
 
     [Tooltip("How quickly the glider's pitch stabilizes with no input.")]
     [SerializeField] private float _pitchDampening = 3f;
@@ -145,75 +147,76 @@ public class GliderController2 : SystemBase
 
     private void HandleGlidingMovement()
     {
-        float difference = 0;
-
-        // Apply drag
+        // --- BASIC DRAG & INPUT ---
         _velocityVector -= _parachuteDrag * Time.deltaTime * _velocityVector;
+        float v = locomotionInput.DirectionInput.y;
+        float h = locomotionInput.DirectionInput.x;
 
-        // --- PITCH CALCULATIONS (NEW) ---
-        float v = locomotionInput.DirectionInput.y; // Get vertical input
-
-        // Determine the target pitch angle from player input
-        // Positive 'v' (W key) pitches down, negative 'v' (S key) pitches up
+        // --- PITCH & ROLL CALCULATIONS ---
+        // Pitch
         float targetPitch = v > 0 ? v * _maxPitchAngle : v * -_minPitchAngle;
-
-        // Smoothly interpolate to the target pitch
         _currentPitch = Mathf.Lerp(_currentPitch, targetPitch, _pitchSpeed * Time.deltaTime);
-
-        // Apply dampening to level out pitch automatically when there is no input
         if (Mathf.Approximately(v, 0f))
         {
             _currentPitch = Mathf.Lerp(_currentPitch, 0f, _pitchDampening * Time.deltaTime);
         }
-
-        // --- VERTICAL SPEED & LIFT ---
-        // Calculate how pitch affects lift. Pitching up (_currentPitch < 0) reduces fall speed.
-        float pitchToLift = (_currentPitch < 0) ? (_currentPitch / _minPitchAngle) * _liftFromPitch : 0;
-
-        float ySpeed = _velocityVector.y + player.Gravity * Time.deltaTime;
-        ySpeed += pitchToLift * Time.deltaTime; // Apply lift
-
-        if (ySpeed < _fallSpeed)
-        {
-            difference = _fallSpeed - ySpeed;
-            ySpeed = _fallSpeed;
-        }
-        _velocityVector.y = ySpeed;
-
-        // --- ROLL & YAW CALCULATIONS (EXISTING) ---
-        float h = locomotionInput.DirectionInput.x;
+        // Roll
         float targetRoll = -h * _maxRollAngle;
         _currentRoll = Mathf.Lerp(_currentRoll, targetRoll, _turnSpeed * Time.deltaTime);
         if (Mathf.Approximately(h, 0f))
         {
             _currentRoll = Mathf.Lerp(_currentRoll, 0f, _rollDampening * Time.deltaTime);
         }
-        float yawChange = -_currentRoll * _yawFromRoll * Time.deltaTime;
 
-        // --- APPLY ROTATIONS (MODIFIED) ---
-        // Yaw is applied in world space to turn the character.
-        // Pitch and Roll are applied in local space to bank and tilt the character model.
+        // --- VERTICAL & HORIZONTAL PHYSICS ---
+        Vector3 horizontalVelocity = new Vector3(_velocityVector.x, 0, _velocityVector.z);
+        float ySpeed = _velocityVector.y + player.Gravity * Time.deltaTime;
+
+        // --- STATE 1: PULLING UP (Trade Speed for Lift) ---
+        if (_currentPitch < -0.1f)
+        {
+            // Lift is proportional to how fast you're already going.
+            float liftFactor = (_currentPitch / _minPitchAngle); // A 0-1 value based on how far you're pulled back.
+            float generatedLift = horizontalVelocity.magnitude * liftFactor * _liftFromPitch;
+
+            // Apply the upward lift. This can overcome gravity if you have enough speed.
+            ySpeed += generatedLift * Time.deltaTime;
+
+            // That lift costs forward momentum (induced drag).
+            float liftCost = generatedLift * _forwardMomentumCost;
+            _velocityVector -= transform.forward * liftCost * Time.deltaTime;
+        }
+        // --- STATE 2: DIVING (Trade Altitude for Speed) ---
+        else
+        {
+            float difference = 0;
+            // If falling faster than max fall speed, convert the difference to forward thrust.
+            if (ySpeed < _fallSpeed)
+            {
+                difference = _fallSpeed - ySpeed;
+                ySpeed = _fallSpeed;
+            }
+
+            // Add extra boost for how steeply you are diving.
+            float pitchToSpeed = (_currentPitch > 0) ? (_currentPitch / _maxPitchAngle) * _speedBoostFromPitch : 0;
+
+            Vector3 forwardThrust = transform.forward * (difference + pitchToSpeed);
+            _velocityVector += forwardThrust;
+        }
+
+        _velocityVector.y = ySpeed;
+
+        // --- APPLY ROTATION & MOVEMENT ---
+        float yawChange = -_currentRoll * _yawFromRoll * Time.deltaTime;
         transform.Rotate(0, yawChange, 0, Space.World);
         transform.localRotation = Quaternion.Euler(_currentPitch, transform.localEulerAngles.y, _currentRoll);
 
-        // --- FORWARD THRUST & SPEED BOOST (MODIFIED) ---
-        // Calculate speed boost from pitching down (_currentPitch > 0)
-        float pitchToSpeed = (_currentPitch > 0) ? (_currentPitch / _maxPitchAngle) * _speedBoostFromPitch : 0;
-
-        // Convert potential energy (from clamped fall speed) and pitch dive into forward thrust
-        Vector3 forwardThrust = transform.forward * (difference + pitchToSpeed);
-        _velocityVector += forwardThrust;
-
-        // Clamp the horizontal speed to the maximum glide speed
-        Vector3 horizontalVelocity = new Vector3(_velocityVector.x, 0, _velocityVector.z);
-        if (horizontalVelocity.magnitude > _maxGlideSpeed)
+        // Clamp total speed
+        if (_velocityVector.magnitude > _maxGlideSpeed)
         {
-            horizontalVelocity = horizontalVelocity.normalized * _maxGlideSpeed;
-            _velocityVector.x = horizontalVelocity.x;
-            _velocityVector.z = horizontalVelocity.z;
+            _velocityVector = _velocityVector.normalized * _maxGlideSpeed;
         }
 
-        // Apply the final calculated movement to the CharacterController
         characterController.Move(_velocityVector * Time.deltaTime);
     }
 
