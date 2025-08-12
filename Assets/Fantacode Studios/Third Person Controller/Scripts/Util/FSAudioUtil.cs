@@ -23,5 +23,18 @@ namespace FS_Util
             _audioSource.clip = clip;
             _audioSource.Play();
         }
+
+        public static void PlaySfxNew(AudioClip clip)
+        {
+            if (clip == null) return;
+
+            GameObject sfx = new GameObject("FS Audio Source");
+            var audioSource = sfx.AddComponent<AudioSource>();
+
+            audioSource.clip = clip;
+            audioSource.Play();
+
+            Object.Destroy(sfx, clip.length + 1f);
+        }
     }
 }

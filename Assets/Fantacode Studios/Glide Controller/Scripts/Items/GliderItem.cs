@@ -11,6 +11,7 @@ namespace SD_GlidingSystem
     {
         public AnimGraphClipInfo glidingClip;
         public GameObject glider;
+        public FlightProfile flightProfile;
 
         public override void SetCategory()
         {

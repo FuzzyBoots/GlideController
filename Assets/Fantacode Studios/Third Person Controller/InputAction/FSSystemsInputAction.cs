@@ -8,7 +8,7 @@
 //     the code is regenerated.
 // </auto-generated>
 //------------------------------------------------------------------------------
-#if inputsystem
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -103,6 +103,24 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
                     ""name"": ""Crouch"",
                     ""type"": ""Button"",
                     ""id"": ""72812f26-500f-45c8-a534-5f51fa0d6ed2"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""CyclePreviousItem"",
+                    ""type"": ""Button"",
+                    ""id"": ""56853909-03e3-4a6e-a837-f5545a8a3ba2"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""CycleNextItem"",
+                    ""type"": ""Button"",
+                    ""id"": ""bc8787b4-9fa7-41fd-9061-aa0503b0eab5"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -322,7 +340,18 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""78bd610e-a565-4c99-9e22-4a2931c22717"",
-                    ""path"": ""<Gamepad>/leftStickPress"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""QuickSwitchItem"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6a5ba12d-6f16-451a-886b-f1c211638e00"",
+                    ""path"": ""<Keyboard>/t"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -344,11 +373,55 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""f1cf7f75-646c-4574-ab8e-6200dd333993"",
-                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Crouch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ee735c7b-2e32-427a-8f2e-e5b55cd69af1"",
+                    ""path"": ""<Gamepad>/dpad/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CyclePreviousItem"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e46470f3-5f35-439e-9538-ba954c487574"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CyclePreviousItem"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fa158d0b-260f-414b-957e-16c72128e545"",
+                    ""path"": ""<Gamepad>/dpad/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CycleNextItem"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""98e2e0b0-827d-4830-96e7-82528f961edb"",
+                    ""path"": ""<Keyboard>/4"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CycleNextItem"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -557,7 +630,7 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
             ]
         },
         {
-            ""name"": ""Combat"",
+            ""name"": ""MeleeCombat"",
             ""id"": ""8ec75862-c34a-4d12-a7e3-c200b44c14ed"",
             ""actions"": [
                 {
@@ -606,45 +679,9 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Dodge"",
-                    ""type"": ""Button"",
-                    ""id"": ""8750cac5-a995-4100-9edb-1e28dd4322d5"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Roll"",
-                    ""type"": ""Button"",
-                    ""id"": ""6f4edf65-71df-41e7-a3a8-a8ea544b5302"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
                     ""name"": ""SpecialAttack"",
                     ""type"": ""Button"",
                     ""id"": ""b12ca6f2-04c9-4a70-82a7-d3fdb654f34b"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Equip"",
-                    ""type"": ""Button"",
-                    ""id"": ""c2a77910-5f35-41fb-95e7-1ff79dc59da4"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""UnEquip"",
-                    ""type"": ""Button"",
-                    ""id"": ""0652f6f9-e009-4833-bcb7-7359a9139731"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -764,50 +801,6 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""b0570ebb-d21d-4ea1-a399-a2af4cbf6ef0"",
-                    ""path"": ""<Keyboard>/alt"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": ""Keyboard"",
-                    ""action"": ""Dodge"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""3bef2081-8169-4688-9f68-874ef8fa4bef"",
-                    ""path"": ""<Gamepad>/buttonEast"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Dodge"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""66b3bbf4-41bd-405b-bea6-c0938a6fe3f3"",
-                    ""path"": ""<Keyboard>/space"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Roll"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""fa96699a-bf85-435a-a5a1-4d69f6ff7619"",
-                    ""path"": ""<Gamepad>/buttonSouth"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Roll"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""4c46363a-3158-4b83-865e-fb65b16d3945"",
                     ""path"": ""<Keyboard>/x"",
                     ""interactions"": """",
@@ -825,50 +818,6 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""SpecialAttack"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""ee36bb8f-7064-4e1e-b707-d20e1b594227"",
-                    ""path"": ""<Keyboard>/1"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Equip"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""89f81972-dec4-4ab2-8745-a2a6908ed3d5"",
-                    ""path"": ""<Gamepad>/dpad/left"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Equip"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""f3b6ecb5-5f2e-44e8-a36b-933779838663"",
-                    ""path"": ""<Keyboard>/1"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""UnEquip"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""b7fb8f44-fcfc-4ffc-b99d-e81f47be87d4"",
-                    ""path"": ""<Gamepad>/dpad/left"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""UnEquip"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1324,6 +1273,332 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Shooter"",
+            ""id"": ""2583e1b1-bf5b-4acb-95ec-889599fdd41b"",
+            ""actions"": [
+                {
+                    ""name"": ""Fire"",
+                    ""type"": ""Button"",
+                    ""id"": ""8b92f84a-fff2-4f6b-b321-2484c5d39386"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Aim"",
+                    ""type"": ""Button"",
+                    ""id"": ""04797344-bf4f-44fa-8327-a1e29f04d822"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Reload"",
+                    ""type"": ""Button"",
+                    ""id"": ""236be43e-8436-4472-b5bd-38f412a4a3bc"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""CancelThrow"",
+                    ""type"": ""Button"",
+                    ""id"": ""0dd5cbc4-9452-442d-84a9-a6637f444214"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Scope"",
+                    ""type"": ""Button"",
+                    ""id"": ""d794e23e-7625-4edb-8f42-6f8f478bc217"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""892fb07b-a2dc-4f00-b05e-791883c8be0c"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fire"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""af6ab3ad-ba3e-4392-879d-0cccbaccc8ce"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fire"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0e085a8c-ab98-48a0-96ac-33f05ccfc732"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Aim"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""dd1b56ac-495f-4cf6-8e59-50a49cd8c765"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Aim"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""db8e0109-db07-4d67-9b21-a90ca0f9d208"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reload"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""01b0529a-88b3-431a-b4ae-c7217abaf5fb"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reload"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4fabf3f5-1ed4-4ca3-a4e7-c4bf764918ed"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CancelThrow"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1c4470c7-a882-45dc-ad56-9d24f43a2404"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CancelThrow"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""cf0c04aa-2c0c-4a6e-b42c-d17e1147d2c3"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Scope"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2d3af9e9-3558-4f89-98fc-cb114435bee0"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Scope"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""Combat"",
+            ""id"": ""a0825e34-0e8f-4046-a40a-c673ee1454f1"",
+            ""actions"": [
+                {
+                    ""name"": ""UnEquip"",
+                    ""type"": ""Button"",
+                    ""id"": ""f230bdd2-0a7e-4f03-b36b-4c924622e511"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Equip"",
+                    ""type"": ""Button"",
+                    ""id"": ""d357ee50-f593-4785-89e5-c3978cd3bdc8"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Roll"",
+                    ""type"": ""Button"",
+                    ""id"": ""2eb1d6a5-af0b-4c2a-bc42-da53bdae3d0f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Dodge"",
+                    ""type"": ""Button"",
+                    ""id"": ""5a0fda3e-d316-44a2-90d4-34aefb5e6934"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Cover"",
+                    ""type"": ""Button"",
+                    ""id"": ""bb747d35-d107-473d-b489-69c168d05096"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""9798d6db-fe9b-4904-8db6-ff3b787f52e5"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""UnEquip"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e2af9a1e-139f-4146-9c96-f31c20f303ee"",
+                    ""path"": ""<Gamepad>/dpad/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""UnEquip"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6b7c14bb-6a59-4c23-8665-613fc3d0deff"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Equip"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5c0d72e4-f587-427a-8d12-e5357580c6fe"",
+                    ""path"": ""<Gamepad>/dpad/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Equip"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0ad137f2-1757-41c8-84c4-f4994cf2fa84"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Roll"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""890d322d-fe39-4d89-b7af-6a7ca4e1c2e7"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Roll"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""264ba1dc-76d8-4390-8ee7-5e9c1fb1d303"",
+                    ""path"": ""<Keyboard>/alt"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Dodge"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""cc5f1cd6-aa79-42de-aa84-7c490dda3a3d"",
+                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Dodge"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f0a016d7-6bf8-417e-8ee7-e41f4dbd0e4f"",
+                    ""path"": ""<Keyboard>/g"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cover"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""db9fb09e-31ca-4fd5-96e2-b2b33b62cd4f"",
+                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cover"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -1339,6 +1614,8 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         m_Locomotion_Interaction = m_Locomotion.FindAction("Interaction", throwIfNotFound: true);
         m_Locomotion_QuickSwitchItem = m_Locomotion.FindAction("QuickSwitchItem", throwIfNotFound: true);
         m_Locomotion_Crouch = m_Locomotion.FindAction("Crouch", throwIfNotFound: true);
+        m_Locomotion_CyclePreviousItem = m_Locomotion.FindAction("CyclePreviousItem", throwIfNotFound: true);
+        m_Locomotion_CycleNextItem = m_Locomotion.FindAction("CycleNextItem", throwIfNotFound: true);
         // Swing
         m_Swing = asset.FindActionMap("Swing", throwIfNotFound: true);
         m_Swing_Hook = m_Swing.FindAction("Hook", throwIfNotFound: true);
@@ -1349,18 +1626,14 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         m_Parkour_Jump = m_Parkour.FindAction("Jump", throwIfNotFound: true);
         m_Parkour_JumpFromHang = m_Parkour.FindAction("JumpFromHang", throwIfNotFound: true);
         m_Parkour_Drop = m_Parkour.FindAction("Drop", throwIfNotFound: true);
-        // Combat
-        m_Combat = asset.FindActionMap("Combat", throwIfNotFound: true);
-        m_Combat_Attack = m_Combat.FindAction("Attack", throwIfNotFound: true);
-        m_Combat_Block = m_Combat.FindAction("Block", throwIfNotFound: true);
-        m_Combat_CombatMode = m_Combat.FindAction("Combat Mode", throwIfNotFound: true);
-        m_Combat_Counter = m_Combat.FindAction("Counter", throwIfNotFound: true);
-        m_Combat_HeavyAttack = m_Combat.FindAction("HeavyAttack", throwIfNotFound: true);
-        m_Combat_Dodge = m_Combat.FindAction("Dodge", throwIfNotFound: true);
-        m_Combat_Roll = m_Combat.FindAction("Roll", throwIfNotFound: true);
-        m_Combat_SpecialAttack = m_Combat.FindAction("SpecialAttack", throwIfNotFound: true);
-        m_Combat_Equip = m_Combat.FindAction("Equip", throwIfNotFound: true);
-        m_Combat_UnEquip = m_Combat.FindAction("UnEquip", throwIfNotFound: true);
+        // MeleeCombat
+        m_MeleeCombat = asset.FindActionMap("MeleeCombat", throwIfNotFound: true);
+        m_MeleeCombat_Attack = m_MeleeCombat.FindAction("Attack", throwIfNotFound: true);
+        m_MeleeCombat_Block = m_MeleeCombat.FindAction("Block", throwIfNotFound: true);
+        m_MeleeCombat_CombatMode = m_MeleeCombat.FindAction("Combat Mode", throwIfNotFound: true);
+        m_MeleeCombat_Counter = m_MeleeCombat.FindAction("Counter", throwIfNotFound: true);
+        m_MeleeCombat_HeavyAttack = m_MeleeCombat.FindAction("HeavyAttack", throwIfNotFound: true);
+        m_MeleeCombat_SpecialAttack = m_MeleeCombat.FindAction("SpecialAttack", throwIfNotFound: true);
         // Grappling
         m_Grappling = asset.FindActionMap("Grappling", throwIfNotFound: true);
         m_Grappling_GrapplingHook = m_Grappling.FindAction("GrapplingHook", throwIfNotFound: true);
@@ -1379,6 +1652,20 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         m_Inventory_NextCategory = m_Inventory.FindAction("NextCategory", throwIfNotFound: true);
         m_Inventory_PreviousCategory = m_Inventory.FindAction("PreviousCategory", throwIfNotFound: true);
         m_Inventory_OpenInventory = m_Inventory.FindAction("OpenInventory", throwIfNotFound: true);
+        // Shooter
+        m_Shooter = asset.FindActionMap("Shooter", throwIfNotFound: true);
+        m_Shooter_Fire = m_Shooter.FindAction("Fire", throwIfNotFound: true);
+        m_Shooter_Aim = m_Shooter.FindAction("Aim", throwIfNotFound: true);
+        m_Shooter_Reload = m_Shooter.FindAction("Reload", throwIfNotFound: true);
+        m_Shooter_CancelThrow = m_Shooter.FindAction("CancelThrow", throwIfNotFound: true);
+        m_Shooter_Scope = m_Shooter.FindAction("Scope", throwIfNotFound: true);
+        // Combat
+        m_Combat = asset.FindActionMap("Combat", throwIfNotFound: true);
+        m_Combat_UnEquip = m_Combat.FindAction("UnEquip", throwIfNotFound: true);
+        m_Combat_Equip = m_Combat.FindAction("Equip", throwIfNotFound: true);
+        m_Combat_Roll = m_Combat.FindAction("Roll", throwIfNotFound: true);
+        m_Combat_Dodge = m_Combat.FindAction("Dodge", throwIfNotFound: true);
+        m_Combat_Cover = m_Combat.FindAction("Cover", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -1449,6 +1736,8 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
     private readonly InputAction m_Locomotion_Interaction;
     private readonly InputAction m_Locomotion_QuickSwitchItem;
     private readonly InputAction m_Locomotion_Crouch;
+    private readonly InputAction m_Locomotion_CyclePreviousItem;
+    private readonly InputAction m_Locomotion_CycleNextItem;
     public struct LocomotionActions
     {
         private @FSSystemsInputAction m_Wrapper;
@@ -1462,6 +1751,8 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         public InputAction @Interaction => m_Wrapper.m_Locomotion_Interaction;
         public InputAction @QuickSwitchItem => m_Wrapper.m_Locomotion_QuickSwitchItem;
         public InputAction @Crouch => m_Wrapper.m_Locomotion_Crouch;
+        public InputAction @CyclePreviousItem => m_Wrapper.m_Locomotion_CyclePreviousItem;
+        public InputAction @CycleNextItem => m_Wrapper.m_Locomotion_CycleNextItem;
         public InputActionMap Get() { return m_Wrapper.m_Locomotion; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -1498,6 +1789,12 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
             @Crouch.started += instance.OnCrouch;
             @Crouch.performed += instance.OnCrouch;
             @Crouch.canceled += instance.OnCrouch;
+            @CyclePreviousItem.started += instance.OnCyclePreviousItem;
+            @CyclePreviousItem.performed += instance.OnCyclePreviousItem;
+            @CyclePreviousItem.canceled += instance.OnCyclePreviousItem;
+            @CycleNextItem.started += instance.OnCycleNextItem;
+            @CycleNextItem.performed += instance.OnCycleNextItem;
+            @CycleNextItem.canceled += instance.OnCycleNextItem;
         }
 
         private void UnregisterCallbacks(ILocomotionActions instance)
@@ -1529,6 +1826,12 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
             @Crouch.started -= instance.OnCrouch;
             @Crouch.performed -= instance.OnCrouch;
             @Crouch.canceled -= instance.OnCrouch;
+            @CyclePreviousItem.started -= instance.OnCyclePreviousItem;
+            @CyclePreviousItem.performed -= instance.OnCyclePreviousItem;
+            @CyclePreviousItem.canceled -= instance.OnCyclePreviousItem;
+            @CycleNextItem.started -= instance.OnCycleNextItem;
+            @CycleNextItem.performed -= instance.OnCycleNextItem;
+            @CycleNextItem.canceled -= instance.OnCycleNextItem;
         }
 
         public void RemoveCallbacks(ILocomotionActions instance)
@@ -1671,42 +1974,34 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
     }
     public ParkourActions @Parkour => new ParkourActions(this);
 
-    // Combat
-    private readonly InputActionMap m_Combat;
-    private List<ICombatActions> m_CombatActionsCallbackInterfaces = new List<ICombatActions>();
-    private readonly InputAction m_Combat_Attack;
-    private readonly InputAction m_Combat_Block;
-    private readonly InputAction m_Combat_CombatMode;
-    private readonly InputAction m_Combat_Counter;
-    private readonly InputAction m_Combat_HeavyAttack;
-    private readonly InputAction m_Combat_Dodge;
-    private readonly InputAction m_Combat_Roll;
-    private readonly InputAction m_Combat_SpecialAttack;
-    private readonly InputAction m_Combat_Equip;
-    private readonly InputAction m_Combat_UnEquip;
-    public struct CombatActions
+    // MeleeCombat
+    private readonly InputActionMap m_MeleeCombat;
+    private List<IMeleeCombatActions> m_MeleeCombatActionsCallbackInterfaces = new List<IMeleeCombatActions>();
+    private readonly InputAction m_MeleeCombat_Attack;
+    private readonly InputAction m_MeleeCombat_Block;
+    private readonly InputAction m_MeleeCombat_CombatMode;
+    private readonly InputAction m_MeleeCombat_Counter;
+    private readonly InputAction m_MeleeCombat_HeavyAttack;
+    private readonly InputAction m_MeleeCombat_SpecialAttack;
+    public struct MeleeCombatActions
     {
         private @FSSystemsInputAction m_Wrapper;
-        public CombatActions(@FSSystemsInputAction wrapper) { m_Wrapper = wrapper; }
-        public InputAction @Attack => m_Wrapper.m_Combat_Attack;
-        public InputAction @Block => m_Wrapper.m_Combat_Block;
-        public InputAction @CombatMode => m_Wrapper.m_Combat_CombatMode;
-        public InputAction @Counter => m_Wrapper.m_Combat_Counter;
-        public InputAction @HeavyAttack => m_Wrapper.m_Combat_HeavyAttack;
-        public InputAction @Dodge => m_Wrapper.m_Combat_Dodge;
-        public InputAction @Roll => m_Wrapper.m_Combat_Roll;
-        public InputAction @SpecialAttack => m_Wrapper.m_Combat_SpecialAttack;
-        public InputAction @Equip => m_Wrapper.m_Combat_Equip;
-        public InputAction @UnEquip => m_Wrapper.m_Combat_UnEquip;
-        public InputActionMap Get() { return m_Wrapper.m_Combat; }
+        public MeleeCombatActions(@FSSystemsInputAction wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Attack => m_Wrapper.m_MeleeCombat_Attack;
+        public InputAction @Block => m_Wrapper.m_MeleeCombat_Block;
+        public InputAction @CombatMode => m_Wrapper.m_MeleeCombat_CombatMode;
+        public InputAction @Counter => m_Wrapper.m_MeleeCombat_Counter;
+        public InputAction @HeavyAttack => m_Wrapper.m_MeleeCombat_HeavyAttack;
+        public InputAction @SpecialAttack => m_Wrapper.m_MeleeCombat_SpecialAttack;
+        public InputActionMap Get() { return m_Wrapper.m_MeleeCombat; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
         public bool enabled => Get().enabled;
-        public static implicit operator InputActionMap(CombatActions set) { return set.Get(); }
-        public void AddCallbacks(ICombatActions instance)
+        public static implicit operator InputActionMap(MeleeCombatActions set) { return set.Get(); }
+        public void AddCallbacks(IMeleeCombatActions instance)
         {
-            if (instance == null || m_Wrapper.m_CombatActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_CombatActionsCallbackInterfaces.Add(instance);
+            if (instance == null || m_Wrapper.m_MeleeCombatActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_MeleeCombatActionsCallbackInterfaces.Add(instance);
             @Attack.started += instance.OnAttack;
             @Attack.performed += instance.OnAttack;
             @Attack.canceled += instance.OnAttack;
@@ -1722,24 +2017,12 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
             @HeavyAttack.started += instance.OnHeavyAttack;
             @HeavyAttack.performed += instance.OnHeavyAttack;
             @HeavyAttack.canceled += instance.OnHeavyAttack;
-            @Dodge.started += instance.OnDodge;
-            @Dodge.performed += instance.OnDodge;
-            @Dodge.canceled += instance.OnDodge;
-            @Roll.started += instance.OnRoll;
-            @Roll.performed += instance.OnRoll;
-            @Roll.canceled += instance.OnRoll;
             @SpecialAttack.started += instance.OnSpecialAttack;
             @SpecialAttack.performed += instance.OnSpecialAttack;
             @SpecialAttack.canceled += instance.OnSpecialAttack;
-            @Equip.started += instance.OnEquip;
-            @Equip.performed += instance.OnEquip;
-            @Equip.canceled += instance.OnEquip;
-            @UnEquip.started += instance.OnUnEquip;
-            @UnEquip.performed += instance.OnUnEquip;
-            @UnEquip.canceled += instance.OnUnEquip;
         }
 
-        private void UnregisterCallbacks(ICombatActions instance)
+        private void UnregisterCallbacks(IMeleeCombatActions instance)
         {
             @Attack.started -= instance.OnAttack;
             @Attack.performed -= instance.OnAttack;
@@ -1756,38 +2039,26 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
             @HeavyAttack.started -= instance.OnHeavyAttack;
             @HeavyAttack.performed -= instance.OnHeavyAttack;
             @HeavyAttack.canceled -= instance.OnHeavyAttack;
-            @Dodge.started -= instance.OnDodge;
-            @Dodge.performed -= instance.OnDodge;
-            @Dodge.canceled -= instance.OnDodge;
-            @Roll.started -= instance.OnRoll;
-            @Roll.performed -= instance.OnRoll;
-            @Roll.canceled -= instance.OnRoll;
             @SpecialAttack.started -= instance.OnSpecialAttack;
             @SpecialAttack.performed -= instance.OnSpecialAttack;
             @SpecialAttack.canceled -= instance.OnSpecialAttack;
-            @Equip.started -= instance.OnEquip;
-            @Equip.performed -= instance.OnEquip;
-            @Equip.canceled -= instance.OnEquip;
-            @UnEquip.started -= instance.OnUnEquip;
-            @UnEquip.performed -= instance.OnUnEquip;
-            @UnEquip.canceled -= instance.OnUnEquip;
         }
 
-        public void RemoveCallbacks(ICombatActions instance)
+        public void RemoveCallbacks(IMeleeCombatActions instance)
         {
-            if (m_Wrapper.m_CombatActionsCallbackInterfaces.Remove(instance))
+            if (m_Wrapper.m_MeleeCombatActionsCallbackInterfaces.Remove(instance))
                 UnregisterCallbacks(instance);
         }
 
-        public void SetCallbacks(ICombatActions instance)
+        public void SetCallbacks(IMeleeCombatActions instance)
         {
-            foreach (var item in m_Wrapper.m_CombatActionsCallbackInterfaces)
+            foreach (var item in m_Wrapper.m_MeleeCombatActionsCallbackInterfaces)
                 UnregisterCallbacks(item);
-            m_Wrapper.m_CombatActionsCallbackInterfaces.Clear();
+            m_Wrapper.m_MeleeCombatActionsCallbackInterfaces.Clear();
             AddCallbacks(instance);
         }
     }
-    public CombatActions @Combat => new CombatActions(this);
+    public MeleeCombatActions @MeleeCombat => new MeleeCombatActions(this);
 
     // Grappling
     private readonly InputActionMap m_Grappling;
@@ -1998,6 +2269,162 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         }
     }
     public InventoryActions @Inventory => new InventoryActions(this);
+
+    // Shooter
+    private readonly InputActionMap m_Shooter;
+    private List<IShooterActions> m_ShooterActionsCallbackInterfaces = new List<IShooterActions>();
+    private readonly InputAction m_Shooter_Fire;
+    private readonly InputAction m_Shooter_Aim;
+    private readonly InputAction m_Shooter_Reload;
+    private readonly InputAction m_Shooter_CancelThrow;
+    private readonly InputAction m_Shooter_Scope;
+    public struct ShooterActions
+    {
+        private @FSSystemsInputAction m_Wrapper;
+        public ShooterActions(@FSSystemsInputAction wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Fire => m_Wrapper.m_Shooter_Fire;
+        public InputAction @Aim => m_Wrapper.m_Shooter_Aim;
+        public InputAction @Reload => m_Wrapper.m_Shooter_Reload;
+        public InputAction @CancelThrow => m_Wrapper.m_Shooter_CancelThrow;
+        public InputAction @Scope => m_Wrapper.m_Shooter_Scope;
+        public InputActionMap Get() { return m_Wrapper.m_Shooter; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(ShooterActions set) { return set.Get(); }
+        public void AddCallbacks(IShooterActions instance)
+        {
+            if (instance == null || m_Wrapper.m_ShooterActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_ShooterActionsCallbackInterfaces.Add(instance);
+            @Fire.started += instance.OnFire;
+            @Fire.performed += instance.OnFire;
+            @Fire.canceled += instance.OnFire;
+            @Aim.started += instance.OnAim;
+            @Aim.performed += instance.OnAim;
+            @Aim.canceled += instance.OnAim;
+            @Reload.started += instance.OnReload;
+            @Reload.performed += instance.OnReload;
+            @Reload.canceled += instance.OnReload;
+            @CancelThrow.started += instance.OnCancelThrow;
+            @CancelThrow.performed += instance.OnCancelThrow;
+            @CancelThrow.canceled += instance.OnCancelThrow;
+            @Scope.started += instance.OnScope;
+            @Scope.performed += instance.OnScope;
+            @Scope.canceled += instance.OnScope;
+        }
+
+        private void UnregisterCallbacks(IShooterActions instance)
+        {
+            @Fire.started -= instance.OnFire;
+            @Fire.performed -= instance.OnFire;
+            @Fire.canceled -= instance.OnFire;
+            @Aim.started -= instance.OnAim;
+            @Aim.performed -= instance.OnAim;
+            @Aim.canceled -= instance.OnAim;
+            @Reload.started -= instance.OnReload;
+            @Reload.performed -= instance.OnReload;
+            @Reload.canceled -= instance.OnReload;
+            @CancelThrow.started -= instance.OnCancelThrow;
+            @CancelThrow.performed -= instance.OnCancelThrow;
+            @CancelThrow.canceled -= instance.OnCancelThrow;
+            @Scope.started -= instance.OnScope;
+            @Scope.performed -= instance.OnScope;
+            @Scope.canceled -= instance.OnScope;
+        }
+
+        public void RemoveCallbacks(IShooterActions instance)
+        {
+            if (m_Wrapper.m_ShooterActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(IShooterActions instance)
+        {
+            foreach (var item in m_Wrapper.m_ShooterActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_ShooterActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public ShooterActions @Shooter => new ShooterActions(this);
+
+    // Combat
+    private readonly InputActionMap m_Combat;
+    private List<ICombatActions> m_CombatActionsCallbackInterfaces = new List<ICombatActions>();
+    private readonly InputAction m_Combat_UnEquip;
+    private readonly InputAction m_Combat_Equip;
+    private readonly InputAction m_Combat_Roll;
+    private readonly InputAction m_Combat_Dodge;
+    private readonly InputAction m_Combat_Cover;
+    public struct CombatActions
+    {
+        private @FSSystemsInputAction m_Wrapper;
+        public CombatActions(@FSSystemsInputAction wrapper) { m_Wrapper = wrapper; }
+        public InputAction @UnEquip => m_Wrapper.m_Combat_UnEquip;
+        public InputAction @Equip => m_Wrapper.m_Combat_Equip;
+        public InputAction @Roll => m_Wrapper.m_Combat_Roll;
+        public InputAction @Dodge => m_Wrapper.m_Combat_Dodge;
+        public InputAction @Cover => m_Wrapper.m_Combat_Cover;
+        public InputActionMap Get() { return m_Wrapper.m_Combat; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(CombatActions set) { return set.Get(); }
+        public void AddCallbacks(ICombatActions instance)
+        {
+            if (instance == null || m_Wrapper.m_CombatActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_CombatActionsCallbackInterfaces.Add(instance);
+            @UnEquip.started += instance.OnUnEquip;
+            @UnEquip.performed += instance.OnUnEquip;
+            @UnEquip.canceled += instance.OnUnEquip;
+            @Equip.started += instance.OnEquip;
+            @Equip.performed += instance.OnEquip;
+            @Equip.canceled += instance.OnEquip;
+            @Roll.started += instance.OnRoll;
+            @Roll.performed += instance.OnRoll;
+            @Roll.canceled += instance.OnRoll;
+            @Dodge.started += instance.OnDodge;
+            @Dodge.performed += instance.OnDodge;
+            @Dodge.canceled += instance.OnDodge;
+            @Cover.started += instance.OnCover;
+            @Cover.performed += instance.OnCover;
+            @Cover.canceled += instance.OnCover;
+        }
+
+        private void UnregisterCallbacks(ICombatActions instance)
+        {
+            @UnEquip.started -= instance.OnUnEquip;
+            @UnEquip.performed -= instance.OnUnEquip;
+            @UnEquip.canceled -= instance.OnUnEquip;
+            @Equip.started -= instance.OnEquip;
+            @Equip.performed -= instance.OnEquip;
+            @Equip.canceled -= instance.OnEquip;
+            @Roll.started -= instance.OnRoll;
+            @Roll.performed -= instance.OnRoll;
+            @Roll.canceled -= instance.OnRoll;
+            @Dodge.started -= instance.OnDodge;
+            @Dodge.performed -= instance.OnDodge;
+            @Dodge.canceled -= instance.OnDodge;
+            @Cover.started -= instance.OnCover;
+            @Cover.performed -= instance.OnCover;
+            @Cover.canceled -= instance.OnCover;
+        }
+
+        public void RemoveCallbacks(ICombatActions instance)
+        {
+            if (m_Wrapper.m_CombatActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(ICombatActions instance)
+        {
+            foreach (var item in m_Wrapper.m_CombatActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_CombatActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public CombatActions @Combat => new CombatActions(this);
     public interface ILocomotionActions
     {
         void OnMoveInput(InputAction.CallbackContext context);
@@ -2009,6 +2436,8 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         void OnInteraction(InputAction.CallbackContext context);
         void OnQuickSwitchItem(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
+        void OnCyclePreviousItem(InputAction.CallbackContext context);
+        void OnCycleNextItem(InputAction.CallbackContext context);
     }
     public interface ISwingActions
     {
@@ -2022,18 +2451,14 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         void OnJumpFromHang(InputAction.CallbackContext context);
         void OnDrop(InputAction.CallbackContext context);
     }
-    public interface ICombatActions
+    public interface IMeleeCombatActions
     {
         void OnAttack(InputAction.CallbackContext context);
         void OnBlock(InputAction.CallbackContext context);
         void OnCombatMode(InputAction.CallbackContext context);
         void OnCounter(InputAction.CallbackContext context);
         void OnHeavyAttack(InputAction.CallbackContext context);
-        void OnDodge(InputAction.CallbackContext context);
-        void OnRoll(InputAction.CallbackContext context);
         void OnSpecialAttack(InputAction.CallbackContext context);
-        void OnEquip(InputAction.CallbackContext context);
-        void OnUnEquip(InputAction.CallbackContext context);
     }
     public interface IGrapplingActions
     {
@@ -2056,5 +2481,20 @@ public partial class @FSSystemsInputAction: IInputActionCollection2, IDisposable
         void OnPreviousCategory(InputAction.CallbackContext context);
         void OnOpenInventory(InputAction.CallbackContext context);
     }
+    public interface IShooterActions
+    {
+        void OnFire(InputAction.CallbackContext context);
+        void OnAim(InputAction.CallbackContext context);
+        void OnReload(InputAction.CallbackContext context);
+        void OnCancelThrow(InputAction.CallbackContext context);
+        void OnScope(InputAction.CallbackContext context);
+    }
+    public interface ICombatActions
+    {
+        void OnUnEquip(InputAction.CallbackContext context);
+        void OnEquip(InputAction.CallbackContext context);
+        void OnRoll(InputAction.CallbackContext context);
+        void OnDodge(InputAction.CallbackContext context);
+        void OnCover(InputAction.CallbackContext context);
+    }
 }
-#endif

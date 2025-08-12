@@ -4,18 +4,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace FS_ThirdPerson
 {
+    [RequireComponent(typeof(BoneMapper))]
     public class ItemEquipper : MonoBehaviour
     {
         [field: HideInInspector] public List<EquippableItem> equippableItems = new List<EquippableItem>();
 
         public EquippableItem EquippedItem { get; set; }
 
-        public bool IdleAnimationStopped { get; private set; }
+        public bool IsCurrentItemUnusable { get; private set; }
         public EquippableItemHolder LeftHandHolder { get; private set; }
         public EquippableItemHolder RightHandHolder { get; private set; }
 
@@ -32,8 +31,20 @@ namespace FS_ThirdPerson
         public bool PreventItemUnEquip { get; set; } = false;
         public bool InterruptItemSwitching { get; set; } = false;
 
+        /// <summary>
+        /// Invoked when the item becomes completely unusable and can no longer be used (e.g., out of ammo, broken, disabled by game state).
+        /// </summary>
+        public Action<EquippableItem> OnItemBecameUnusable;
 
-        public Action<EquippableItem> OnItemBecameUnused;
+        /// <summary>
+        /// Invoked when the item becomes restricted and cannot be used anymore (e.g., due to conditions like being stunned, disarmed, or out of bounds).
+        /// </summary>
+        public Action<EquippableItem> OnItemBecameRestricted;
+
+        /// <summary>
+        /// Invoked when a previously restricted item becomes usable again (e.g., restriction lifted, re-enabled).
+        /// </summary>
+        public Action<EquippableItem> OnItemBecameUnrestricted;
 
         public Action<EquippableItem> OnEquip;
         public Action OnUnEquip;
@@ -46,15 +57,17 @@ namespace FS_ThirdPerson
         Animator animator;
         AnimGraph animGraph;
         ItemAttacher itemAttacher;
+        BoneMapper boneMapper;
 
         public void Awake()
         {
             animator = GetComponent<Animator>();
             animGraph = GetComponent<AnimGraph>();
             itemAttacher = GetComponent<ItemAttacher>();
+            boneMapper = GetComponent<BoneMapper>();
 
-            LeftHandHolder = animator.GetBoneTransform(HumanBodyBones.LeftHand).GetComponentInChildren<EquippableItemHolder>();
-            RightHandHolder = animator.GetBoneTransform(HumanBodyBones.RightHand).GetComponentInChildren<EquippableItemHolder>();
+            LeftHandHolder = boneMapper.GetBone(BoneType.LeftHand).GetComponentInChildren<EquippableItemHolder>();
+            RightHandHolder = boneMapper.GetBone(BoneType.RightHand).GetComponentInChildren<EquippableItemHolder>();
         }
 
         /// <summary>
@@ -77,12 +90,12 @@ namespace FS_ThirdPerson
 
         #region Equip
 
-        public void EquipItem(EquippableItem itemData, bool playEquipAnimation = true, Action onItemEnabled = null, Action onPrevItemDisabled = null)
+        public void EquipItem(EquippableItem itemData, bool playEquipAnimation = true, Action onItemEnabled = null, Action onPrevItemDisabled = null, EquippableItemObject itemObject = null)
         {
-            StartCoroutine(Equip(itemData, playEquipAnimation, onItemEnabled, onPrevItemDisabled));
+            StartCoroutine(Equip(itemData, playEquipAnimation, onItemEnabled, onPrevItemDisabled, itemObject));
         }
 
-        private IEnumerator Equip(EquippableItem itemData, bool playEquipAnimation = true, Action onItemEnabled = null, Action onPrevItemDisabled = null)
+        private IEnumerator Equip(EquippableItem itemData, bool playEquipAnimation = true, Action onItemEnabled = null, Action onPrevItemDisabled = null, EquippableItemObject itemObject = null)
         {
             // Exit if the item is null, the same as the currently equipped item, or if switching is prevented
             if (itemData == null || EquippedItem == itemData || PreventItemSwitching || IsChangingItem)
@@ -104,8 +117,9 @@ namespace FS_ThirdPerson
             IsEquippingItem = true;
 
             // Attach the new item to the character (returns whether the attachment was successful)
-            var hasItem = SetItem(itemData);
+            var hasItem = SetItem(itemData, itemObject);
 
+            bool weaponEnabled = false;
             // Create an action to enable the item at the correct animation timing
             var itemEnableAction = new ActionData()
             {
@@ -113,6 +127,7 @@ namespace FS_ThirdPerson
                 action = () => { 
                     EnableItem(itemData, playEquipAnimation);
                     onItemEnabled?.Invoke();
+                    weaponEnabled = true;
                 }
             };
 
@@ -125,25 +140,30 @@ namespace FS_ThirdPerson
             else
                 itemEnableAction.action?.Invoke(); // Immediately enable the item if no animation is played
 
+            if(!weaponEnabled)
+            {
+                itemEnableAction.action?.Invoke();
+            }
+
             OnEquipComplete?.Invoke(itemData);
             IsEquippingItem = false;
         }
-        bool SetItem(EquippableItem equippableItemData)
+        bool SetItem(EquippableItem equippableItemData, EquippableItemObject itemObject = null)
         {
             var hasItem = false;
 
             if (equippableItemData.isDualItem)
             {
-                hasItem = SpawnItem(equippableItemData, RightHandHolder, equippableItemData.localPositionR, equippableItemData.localRotationR, HumanBodyBones.RightHand);
-                hasItem = SpawnItem(equippableItemData, LeftHandHolder, equippableItemData.localPositionL, equippableItemData.localRotationL, HumanBodyBones.LeftHand);
+                hasItem = SpawnItem(equippableItemData, RightHandHolder, equippableItemData.localPositionR, equippableItemData.localRotationR, HumanBodyBones.RightHand, itemObject);
+                hasItem = SpawnItem(equippableItemData, LeftHandHolder, equippableItemData.localPositionL, equippableItemData.localRotationL, HumanBodyBones.LeftHand,itemObject);
             }
             else if (equippableItemData.holderBone == HumanBodyBones.RightHand)
             {
-                hasItem = SpawnItem(equippableItemData, RightHandHolder, equippableItemData.localPositionR, equippableItemData.localRotationR, HumanBodyBones.RightHand);
+                hasItem = SpawnItem(equippableItemData, RightHandHolder, equippableItemData.localPositionR, equippableItemData.localRotationR, HumanBodyBones.RightHand,itemObject);
             }
             else if (equippableItemData.holderBone == HumanBodyBones.LeftHand)
             {
-                hasItem = SpawnItem(equippableItemData, LeftHandHolder, equippableItemData.localPositionL, equippableItemData.localRotationL, HumanBodyBones.LeftHand);
+                hasItem = SpawnItem(equippableItemData, LeftHandHolder, equippableItemData.localPositionL, equippableItemData.localRotationL, HumanBodyBones.LeftHand,itemObject);
             }
 
             if (hasItem)
@@ -154,14 +174,28 @@ namespace FS_ThirdPerson
 
             return hasItem;
         }
-        bool SpawnItem(EquippableItem itemData, EquippableItemHolder itemHolder, Vector3 localPosition, Vector3 localRotation, HumanBodyBones bodyBone)
+        bool SpawnItem(EquippableItem itemData, EquippableItemHolder itemHolder, Vector3 localPosition, Vector3 localRotation, HumanBodyBones bodyBone, EquippableItemObject itemObject = null)
         {
-            var items = animator.GetBoneTransform(bodyBone).GetComponentsInChildren<EquippableItemObject>(true);
-            EquippableItemObject currentItem = items.FirstOrDefault(i => i.itemData == itemData && i.GetComponentInParent<EquippableItemHolder>() == itemHolder);
-            
+            GameObject weaponObject = null;
+            if (itemObject != null)
+            {
+                weaponObject = itemObject.gameObject;
+                weaponObject.transform.parent = itemHolder.transform;
+                weaponObject.transform.localPosition = localPosition;
+                weaponObject.transform.localRotation = Quaternion.Euler(localRotation);
+                weaponObject.SetActive(false);
+            }
+
+            EquippableItemObject currentItem = weaponObject?.GetComponent<EquippableItemObject>();
+
+            if (currentItem == null && animator.isHuman)
+            {
+                var items = animator.GetBoneTransform(bodyBone).GetComponentsInChildren<EquippableItemObject>(true);
+                currentItem = items.FirstOrDefault(i => i.itemData == itemData && i.GetComponentInParent<EquippableItemHolder>() == itemHolder);
+            }
+
             if (currentItem == null)
             {
-                GameObject weaponObject = null;
                 if (itemData.modelPrefab != null)
                 {
                     weaponObject = Instantiate(itemData.modelPrefab, itemHolder.transform);
@@ -172,7 +206,7 @@ namespace FS_ThirdPerson
                 else
                 {
                     // For Hand Combat
-                    weaponObject = animator.GetBoneTransform(itemData.holderBone).transform.Find(itemData.holderBone.ToString() + "Collider").gameObject;
+                    weaponObject = boneMapper.GetBone(BoneMapper.HumanBodyBoneToBoneType(itemData.holderBone))?.transform.Find(itemData.holderBone.ToString() + "Collider")?.gameObject;
                 }
 
                 if (weaponObject == null) return false;
@@ -206,12 +240,12 @@ namespace FS_ThirdPerson
 
         #region UnEquip
 
-        public void UnEquipItem(bool playUnEquipAnimation = true, bool dropItem = false, Action onItemDisabled = null)
+        public void UnEquipItem(bool playUnEquipAnimation = true, bool disableItem = true, Action onItemDisabled = null)
         {
-            StartCoroutine(UnEquipItemAsync(playUnEquipAnimation, dropItem, onItemDisabled));
+            StartCoroutine(UnEquipItemAsync(playUnEquipAnimation, disableItem, onItemDisabled));
         }
 
-        private IEnumerator UnEquipItemAsync(bool playUnEquipAnimation = true, bool dropItem = false, Action onItemDisabled = null)
+        private IEnumerator UnEquipItemAsync(bool playUnEquipAnimation = true, bool disableItem = true, Action onItemDisabled = null)
         {
             // Exit if there is no currently equipped item, an item switch is already in progress, 
             // or if unequipping is prevented
@@ -223,7 +257,7 @@ namespace FS_ThirdPerson
 
             // Mark that an item is currently being unequipped
             IsUnEquippingItem = true;
-
+            bool weaponDisabled = false;
             // Define an action that disables the weapon once the unequip animation reaches a certain point
             var weaponDisableAction = new ActionData()
             {
@@ -234,7 +268,7 @@ namespace FS_ThirdPerson
                     OnBeforeItemDisable?.Invoke(itemData);
 
                     // Disable the currently equipped weapon
-                    DisableCurrentItem(dropItem);
+                    DisableCurrentItem(disableItem);
                     onItemDisabled?.Invoke();
 
                     // Clear the currently equipped item reference
@@ -249,6 +283,7 @@ namespace FS_ThirdPerson
 
                     // Reset the animation override controller
                     animGraph.UpdateOverrideController(null, playUnEquipAnimation);
+                    weaponDisabled = true;
                 }
             };
 
@@ -262,28 +297,32 @@ namespace FS_ThirdPerson
             {
                 // If no animation is played, immediately invoke the disable action
                 yield return null;      // Unity seems to crash if we do not wait for a frame
+                yield return null;      // Unity seems to crash if we do not wait for a frame
                 weaponDisableAction.action?.Invoke();
             }
-
+            if (!weaponDisabled)
+            {
+                weaponDisableAction.action?.Invoke();
+            }
             OnUnEquipComplete?.Invoke();
 
             IsUnEquippingItem = false;
         }
-        void DisableCurrentItem(bool dropItem = false)
+        void DisableCurrentItem(bool disableItem = true)
         {
             if (EquippedItem.isDualItem)
             {
-                if (!dropItem)
+                if (disableItem)
                 {
-                    EquippedItemRight.gameObject.SetActive(false);
-                    EquippedItemLeft.gameObject.SetActive(false);
+                    EquippedItemRight?.gameObject.SetActive(false);
+                    EquippedItemLeft?.gameObject.SetActive(false);
                 }
             }
             else
             {
-                if (!dropItem)
+                if (disableItem)
                 {
-                    EquippedItemObject.gameObject.SetActive(false);
+                    EquippedItemObject?.gameObject.SetActive(false);
                 }
             }
         }
@@ -308,7 +347,7 @@ namespace FS_ThirdPerson
             }
             if (EquippedItem == item)
             {
-                UnEquipItem(false, !destroyItem);
+                UnEquipItem(false, destroyItem);
                 if (item.isDualItem)
                 {
                     //var itemCloneR = Instantiate(EquippedItemRight, EquippedItemRight.transform.parent);
@@ -350,7 +389,7 @@ namespace FS_ThirdPerson
                         EquippedItemObject.HandlePhysics(true);
                     }
                 }
-                OnItemBecameUnused?.Invoke(item);
+                OnItemBecameUnusable?.Invoke(item);
             }
         }
 
@@ -360,25 +399,27 @@ namespace FS_ThirdPerson
 
         public void ResumeIdleAnimation()
         {
-            if (IdleAnimationStopped)
+            if (IsCurrentItemUnusable)
             {
-                animGraph.PlayLoopingAnimation(EquippedItem.itemEquippedIdleClip, mask: EquippedItem.itemEquippedIdleClipMask, isActAsAnimatorOutput: true);
-                IdleAnimationStopped = false;
+                PlayIdleAnimation();
+                IsCurrentItemUnusable = false;
+                OnItemBecameUnrestricted?.Invoke(EquippedItem);
             }
         }
 
         public void StopIdleAnimation()
         {
             animGraph.StopLoopingAnimations(true);
-            IdleAnimationStopped = true;
+            IsCurrentItemUnusable = true;
+            OnItemBecameRestricted?.Invoke(EquippedItem);
+        }
+
+        public void PlayIdleAnimation()
+        {
+            animGraph.PlayLoopingAnimation(EquippedItem.itemEquippedIdleClip, mask: EquippedItem.itemEquippedIdleClipMask, isActAsAnimatorOutput: true);
         }
 
         #endregion
-
-        private void OnGUI()
-        {
-            //GUILayout.Label(EquippedItem != null ? EquippedItem.name : "Empty");
-        }
     }
 
 

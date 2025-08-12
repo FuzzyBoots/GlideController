@@ -24,6 +24,7 @@ public class FoldoutGroupAttribute : Attribute
 
 #if UNITY_EDITOR
 // Custom editor that handles drawing the fields in foldout groups
+[CanEditMultipleObjects]  
 [CustomEditor(typeof(MonoBehaviour), true)]
 public class FieldFoldoutEditor : Editor
 {

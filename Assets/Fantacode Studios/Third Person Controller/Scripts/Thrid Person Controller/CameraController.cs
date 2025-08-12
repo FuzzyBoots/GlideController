@@ -1,3 +1,4 @@
+﻿using FS_Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,35 +7,44 @@ using UnityEngine;
 
 namespace FS_ThirdPerson
 {
+    [DefaultExecutionOrder(1)]
     public class CameraController : MonoBehaviour
     {
-        [Tooltip("Target to follow")]
+        // References
+        //[Tooltip("Player's transform")]
+        //public Transform playerTransform;
+
+        [Tooltip("Target the camera will follow. To override this, set the target in the default settings or through override camera settings.")]
+#if UNITY_EDITOR
+        [ReadOnly]
+#endif
         public Transform followTarget;
 
-        [Tooltip("Default setting of the camera. You can override these settings based on the state of the player.")]
-        [SerializeField] CameraSettings defaultSettings;
+        // Camera Type & Default
+        [Tooltip("The type of camera. (Example: ThirdPerson, FirstPerson, etc.)")]
+        [SerializeField] private FSCameraType CameraType = FSCameraType.ThirdPerson;
 
-        [Tooltip("If turned on, the camera will rotate when the player moves sideways.")]
-        [SerializeField] bool advancedCameraRotation = true;
+        public CameraTypeSettings firstPersonCamera;
+        public CameraTypeSettings thirdPersonCamera;
 
-        [Tooltip("Layers to check for collision")]
-        [SerializeField] LayerMask collisionLayers = 1;
-        [Tooltip("This value must be set before starting play mode. It cannot be changed while the game is running.")]
-        [SerializeField] bool lockCursor = true;
+        [Tooltip("Determines whether the cursor should be locked. Must be set before starting play mode. Cannot be changed at runtime.")]
+        [SerializeField] private bool lockCursor = true;
 
-        [Tooltip("Smooth time to use when camera distance is changed")]
-        [SerializeField] float distanceSmoothTime = 0.3f;
-        [Tooltip("Smooth time to use when camera distance is changed due to a collision")]
-        [SerializeField] float distanceSmoothTimeWhenOcluded = 0f;
-        [Tooltip("Smooth time to use when the framing offset is changed")]
-        [SerializeField] float framingSmoothTime = 0.5f;
-        [SerializeField] float collisionPadding = 0.05f;
+        // Collision Settings
+        [Tooltip("Layers to check for collision.")]
+        [SerializeField] private LayerMask collisionLayers = 1;
 
-        [Tooltip("This can be used to override the camera settings for different states")]
-        [SerializeField] List<OverrideSettings> overrideCameraSettings;
+        [Tooltip("Padding value to prevent the camera from clipping through obstacles.")]
+        [SerializeField] private float collisionPadding = 0.05f;
 
-        [Tooltip("This value must be set before starting play mode. It cannot be changed while the game is running.")]
-        [SerializeField] float nearClipPlane = 0.1f;
+        [Tooltip("Near clip plane distance. Must be set before starting play mode. Cannot be changed at runtime.")]
+        [SerializeField] private float nearClipPlane = 0.01f;
+
+        [Tooltip("Smooth time to use when camera distance is changed due to a collision.")]
+        [SerializeField] private float distanceSmoothTimeWhenOcluded = 0.05f;
+
+
+
 
         float cameraShakeAmount = 0.6f;
 
@@ -44,7 +54,7 @@ namespace FS_ThirdPerson
         CameraState currentState;
         Vector3 currentFollowPos;
         float targetDistance, currDistance;
-        Vector3 targetFramingOffset, currFramingOffset;
+        Vector3 currFramingOffset;
 
         float distSmoothVel = 0f;
         Vector3 framingSmoothVel, followSmoothVel = Vector3.zero;
@@ -53,30 +63,37 @@ namespace FS_ThirdPerson
         float rotationY;
         float yRot;
 
+        FSCameraType previousCameraType;
+
         float invertXVal;
         float invertYVal;
+
+        float targetRotationY;
+        float targetRotationX;
 
         Camera camera;
         LocomotionInputManager input;
         PlayerController playerController;
         LocomotionController locomotionController;
+        CameraTypeSettings currentCameraTypeSettings;
 
         private void Awake()
         {
             camera = GetComponent<Camera>();
             camera.nearClipPlane = nearClipPlane;
 
-            input = FindObjectOfType<LocomotionInputManager>();
-            playerController = followTarget.GetComponentInParent<PlayerController>();
-            locomotionController = playerController.GetComponent<LocomotionController>();
+            playerController = followTarget.GetComponent<PlayerController>();
+            input = followTarget.GetComponent<LocomotionInputManager>();
+            locomotionController = followTarget.GetComponent<LocomotionController>();
 
-            playerController.OnStartCameraShake -= StartCameraShake;
             playerController.OnStartCameraShake += StartCameraShake;
+            playerController.CameraLookAtPoint += CameraLookAtPoint;
             playerController.OnLand -= playerController.OnStartCameraShake;
             playerController.OnLand += playerController.OnStartCameraShake;
 
             playerController.SetCustomCameraState += SetCustomCameraState;
             playerController.CameraRecoil += CameraRecoil;
+            previousCameraType = CameraType;
         }
 
         private void Start()
@@ -88,8 +105,12 @@ namespace FS_ThirdPerson
                 Cursor.lockState = CursorLockMode.Locked;
             }
 #endif
+
+            playerController.CameraType = CameraType;
+            currentCameraTypeSettings = CameraType == FSCameraType.FirstPerson ? firstPersonCamera : thirdPersonCamera;
+            var followTarget = currentCameraTypeSettings.defaultSettings.overridedFollowTarget == null ? this.followTarget : currentCameraTypeSettings.defaultSettings.overridedFollowTarget;
             currentFollowPos = followTarget.position - Vector3.forward * 4;
-            settings = defaultSettings;
+            settings = currentCameraTypeSettings.defaultSettings;
             currDistance = settings.distance;
             currFramingOffset = settings.framingOffset;
 
@@ -116,7 +137,7 @@ namespace FS_ThirdPerson
             if (state == SystemState.Locomotion)
                 return (locomotionController.IsCrouching) ? CameraState.Crouching : CameraState.Locomotion;
 
-            if(Enum.TryParse(state.ToString(), out CameraState result))
+            if (Enum.TryParse(state.ToString(), out CameraState result))
                 return result;
             return CameraState.Locomotion;
         }
@@ -125,16 +146,16 @@ namespace FS_ThirdPerson
         {
             customSettings = cameraSettings;
 
-            if(cameraSettings == null)
+            if (cameraSettings == null)
             {
                 var activeState = (playerController.CurrentEquippedSystem != null) ? playerController.CurrentEquippedSystem.State : playerController.CurrentSystemState;
                 var currPlayerState = SystemToCameraState(activeState);
 
-                var overrideSettings = overrideCameraSettings.FirstOrDefault(x => x.state == currPlayerState);
+                var overrideSettings = currentCameraTypeSettings.overrideCameraSettings.FirstOrDefault(x => x.state == currPlayerState);
                 if (overrideSettings != null)
                     settings = overrideSettings.settings;
                 else
-                    settings = defaultSettings;
+                    settings = currentCameraTypeSettings.defaultSettings;
             }
         }
 
@@ -156,28 +177,36 @@ namespace FS_ThirdPerson
 
             GlobalRecoilInfo.recoilPhasePercentage = recoilInfo.recoilPhasePercentage;
         }
-
         private void LateUpdate()
         {
+            playerController.CameraType = CameraType;
+            currentCameraTypeSettings = CameraType == FSCameraType.FirstPerson ? firstPersonCamera : thirdPersonCamera;
+
+            if (previousCameraType != CameraType) playerController.OnCameraTypeChanged?.Invoke(CameraType);
+
             if (Time.timeScale == 0) return;
 
-            var activeState = (playerController.CurrentEquippedSystem != null)? playerController.CurrentEquippedSystem.State : playerController.CurrentSystemState;
+            var activeState = (playerController.CurrentEquippedSystem != null) ?
+                playerController.CurrentEquippedSystem.State : playerController.CurrentSystemState;
             var currPlayerState = SystemToCameraState(activeState);
 
             if (customSettings != null)
                 settings = customSettings;
             else if (currentState != currPlayerState)
             {
-                var overrideSettings = overrideCameraSettings.FirstOrDefault(x => x.state == currPlayerState);
+                var overrideSettings = currentCameraTypeSettings.overrideCameraSettings.FirstOrDefault(x => x.state == currPlayerState);
                 if (overrideSettings != null)
                     settings = overrideSettings.settings;
                 else
-                    settings = defaultSettings;
+                    settings = currentCameraTypeSettings.defaultSettings;
             }
             currentState = currPlayerState;
 
-            var followTarget = settings.followTarget == null ? this.followTarget : settings.followTarget;
+            if (settings == null)
+                settings = currentCameraTypeSettings.defaultSettings;
 
+            var followTarget = settings.overridedFollowTarget == null ? currentCameraTypeSettings.defaultSettings.overridedFollowTarget : settings.overridedFollowTarget;
+            followTarget = followTarget == null ? this.followTarget : followTarget;
 
             Quaternion targetRotation;
             if (settings.localRotationOffset != Vector2.zero)
@@ -186,44 +215,76 @@ namespace FS_ThirdPerson
                 var rotationX = targetEuler.x + settings.localRotationOffset.y;
                 var rotationY = targetEuler.y + settings.localRotationOffset.x;
                 targetRotation = Quaternion.Euler(rotationX, rotationY, 0);
-
             }
             else
             {
+                // Input-based rotation
                 invertXVal = (settings.invertX) ? -1 : 1;
                 invertYVal = (settings.invertY) ? -1 : 1;
 
-                rotationX += input.CameraInput.y * invertYVal * settings.sensitivity;
-                rotationX = Mathf.Clamp(rotationX, settings.minVerticalAngle, settings.maxVerticalAngle);
+                Vector2 cameraInput = input.CameraInput * settings.sensitivity;
+                cameraInput.x *= invertXVal;
+                cameraInput.y *= invertYVal;
 
-                if (input.CameraInput != Vector2.zero)
-                    yRot = rotationY += input.CameraInput.x * invertXVal * settings.sensitivity;
-                else if (advancedCameraRotation && playerController.CurrentSystemState == SystemState.Locomotion && input.CameraInput.x == 0 && input.DirectionInput.y > -.4f)
+                // Apply recoil modifications to input instead of target values
+                if (GlobalRecoilInfo.CameraRecoilDuration > 0)
                 {
-                    StartCoroutine(CameraRotDelay());
-                    rotationY = Mathf.Lerp(rotationY, yRot, Time.deltaTime * 25);
-                }
-                targetRotation = Quaternion.Euler(rotationX, rotationY, 0);
+                    float normalizedTime = 1 - (GlobalRecoilInfo.CameraRecoilDuration / CameraTotalRecoilDuration);
+                    float recoilProgress;
 
+                    if (normalizedTime <= GlobalRecoilInfo.recoilPhasePercentage)
+                    {
+                        recoilProgress = Time.deltaTime / (CameraTotalRecoilDuration * GlobalRecoilInfo.recoilPhasePercentage);
+                        cameraInput.x += GlobalRecoilInfo.CameraRecoilAmount.x * recoilProgress;
+                        cameraInput.y -= GlobalRecoilInfo.CameraRecoilAmount.y * recoilProgress;
+                    }
+                    else
+                    {
+                        recoilProgress = Time.deltaTime / (CameraTotalRecoilDuration * (1 - GlobalRecoilInfo.recoilPhasePercentage));
+                        cameraInput.x -= GlobalRecoilInfo.CameraRecoilAmount.x * recoilProgress;
+                        cameraInput.y += GlobalRecoilInfo.CameraRecoilAmount.y * recoilProgress;
+                    }
+
+                    GlobalRecoilInfo.CameraRecoilDuration -= Time.deltaTime;
+                }
+
+                // Update target rotation angles with input
+                targetRotationX += cameraInput.y;
+                targetRotationX = Mathf.Clamp(targetRotationX, settings.minVerticalAngle, settings.maxVerticalAngle);
+                targetRotationY += cameraInput.x;
+
+                // Use configurable smoothing instead of fixed high-speed lerp
+
+                // Use configurable smoothing instead of fixed high-speed lerp
+                float rotationSmoothSpeed = 10f; // Adjust this value as needed (lower = smoother, higher = more responsive)
+
+                rotationX = Mathf.Lerp(rotationX, targetRotationX, Time.deltaTime * rotationSmoothSpeed);
+                rotationY = Mathf.Lerp(rotationY, targetRotationY, Time.deltaTime * rotationSmoothSpeed);
+
+                targetRotation = Quaternion.Euler(rotationX, rotationY, 0);
+            }
+            if (playerController.AlignTargetWithCameraForward)
+            {
+                this.followTarget.rotation = PlanarRotation;
             }
 
+            // Follow position smoothing
+            var targetFollowPos = Vector3.MoveTowards(previousPos, followTarget.position, Time.deltaTime * 100);
+            currentFollowPos = Vector3.SmoothDamp(currentFollowPos, targetFollowPos, ref followSmoothVel, settings.followSmoothTime);
 
-
-            currentFollowPos = Vector3.SmoothDamp(currentFollowPos, followTarget.position, ref followSmoothVel, settings.followSmoothTime);
+            // Apply camera shake
             if (CameraShakeDuration > 0)
             {
                 currentFollowPos += UnityEngine.Random.insideUnitSphere * CurrentCameraShakeAmount * cameraShakeAmount * Mathf.Clamp01(CameraShakeDuration);
                 CameraShakeDuration -= Time.deltaTime;
             }
 
-            targetFramingOffset = settings.framingOffset;
-            currFramingOffset = Vector3.SmoothDamp(currFramingOffset, targetFramingOffset, ref framingSmoothVel, framingSmoothTime);
-
+            var targetFramingOffset = settings.framingOffset;
+            currFramingOffset = Vector3.SmoothDamp(currFramingOffset, targetFramingOffset, ref framingSmoothVel, currentCameraTypeSettings.framingSmoothTime);
             var forward = targetRotation * Vector3.up;
             forward.y = 0;
 
             var right = targetRotation * Vector3.right;
-
             var focusPosition = currentFollowPos + Vector3.up * currFramingOffset.y + forward * currFramingOffset.z;
 
             bool collisionAdjusted = false;
@@ -231,71 +292,38 @@ namespace FS_ThirdPerson
             {
                 RaycastHit hit;
                 float closestDistance = settings.distance;
-
+                int closestPoint = 0;
                 nearPlanePoints[4] = Vector3.zero;
                 for (int i = 0; i < nearPlanePoints.Count; i++)
                 {
-                    if (Physics.Raycast(focusPosition, (transform.TransformPoint(nearPlanePoints[i]) - focusPosition), out hit, settings.distance, collisionLayers))
+                    if (Physics.Raycast(focusPosition, (transform.TransformPoint(nearPlanePoints[i]) - focusPosition), out hit, (transform.TransformPoint(nearPlanePoints[i]) - focusPosition).magnitude + 0.1f, collisionLayers))
                     {
                         if (hit.distance < closestDistance)
+                        {
                             closestDistance = hit.distance;
-
+                            closestPoint = i;
+                        }
                         collisionAdjusted = true;
-
-                        //Debug.DrawRay(focusPosition, (transform.TransformPoint(nearPlanePoints[i]) - focusPosition), Color.red);
                     }
-                    //Debug.DrawLine(focusPosition, focusPosition + (transform.TransformPoint(nearPlanePoints[i]) - focusPosition).normalized * settings.distance, hit.point != Vector3.zero ? Color.red : Color.green);
-
-
-                    //GizmosExtend.drawSphere(transform.TransformPoint(nearPlanePoints[i]), 0.02f, Color.blue);
-                    //Debug.DrawLine(hit.point, hit.point + Vector3.forward * 0.08f, Color.yellow);
                 }
-
-                targetDistance = Mathf.Clamp(closestDistance, settings.minDistanceFromTarget, closestDistance);
+                //(transform.TransformPoint(nearPlanePoints[i]) - focusPosition);
+                targetDistance = Mathf.Clamp(settings.distance * (closestDistance / (transform.TransformPoint(nearPlanePoints[closestPoint]) - focusPosition).magnitude), settings.minDistanceFromTarget, closestDistance);
             }
             else
                 targetDistance = settings.distance;
 
-            if (!collisionAdjusted)
-                currDistance = Mathf.SmoothDamp(currDistance, targetDistance, ref distSmoothVel, distanceSmoothTime);
-            else
-            {
-                if (distanceSmoothTimeWhenOcluded > Mathf.Epsilon)
-                    currDistance = Mathf.SmoothDamp(currDistance, targetDistance, ref distSmoothVel, distanceSmoothTimeWhenOcluded);
-                else
-                    currDistance = targetDistance;
-            }
+            float smoothTime = collisionAdjusted ? distanceSmoothTimeWhenOcluded : currentCameraTypeSettings.distanceSmoothTime;
+            currDistance = Mathf.SmoothDamp(currDistance, targetDistance, ref distSmoothVel, smoothTime);
 
-
-            transform.position = focusPosition - targetRotation * new Vector3(0, 0, currDistance);                                                                                                                                                                  
+            transform.position = focusPosition - targetRotation * new Vector3(0, 0, currDistance);
             transform.rotation = targetRotation;
+            transform.position += transform.right * currFramingOffset.x * (settings.distance == 0 || settings.localRotationOffset != Vector2.zero ? 1 : currDistance / settings.distance);
+            previousPos = currentFollowPos;
+            previousCameraType = CameraType;
+            playerController.OnCameraLateUpdate?.Invoke();
 
-            transform.position += transform.right * currFramingOffset.x * currDistance / settings.distance;
-
-            if (GlobalRecoilInfo.CameraRecoilDuration > 0)
-            {
-                float normalizedTime = 1 - (GlobalRecoilInfo.CameraRecoilDuration / CameraTotalRecoilDuration);
-                float recoilProgress;
-
-                if (normalizedTime <= GlobalRecoilInfo.recoilPhasePercentage)
-                {
-                    recoilProgress = Time.deltaTime / (CameraTotalRecoilDuration * GlobalRecoilInfo.recoilPhasePercentage);
-                    rotationY += GlobalRecoilInfo.CameraRecoilAmount.x * recoilProgress;
-                    rotationX -= GlobalRecoilInfo.CameraRecoilAmount.y * recoilProgress;
-                }
-                else
-                {
-                    recoilProgress = Time.deltaTime / (CameraTotalRecoilDuration * (1 - GlobalRecoilInfo.recoilPhasePercentage));
-                    rotationY -= GlobalRecoilInfo.CameraRecoilAmount.x * recoilProgress;
-                    rotationX += GlobalRecoilInfo.CameraRecoilAmount.y * recoilProgress;
-                }
-
-                GlobalRecoilInfo.CameraRecoilDuration -= Time.deltaTime;
-            }
-            previousPos = followTarget.transform.position;
-
+            playerController.CurrentCameraSettings = settings;
         }
-
 
         public Quaternion PlanarRotation => Quaternion.Euler(0, rotationY, 0);
 
@@ -312,10 +340,54 @@ namespace FS_ThirdPerson
             CurrentCameraShakeAmount = currentCameraShakeAmount;
             CameraShakeDuration = shakeDuration;
         }
+        public void CameraLookAtPoint(Vector3 worldPoint)
+        {
+            if (input.CameraInput != Vector2.zero)
+                return;
+
+            // 1) Compute direction from camera pos → target point
+            Vector3 dir = worldPoint - transform.position;
+            if (dir.sqrMagnitude < 0.0001f)
+                return; // too close, skip
+
+            // 2) Build a target rotation around global up
+            Quaternion lookRot = Quaternion.LookRotation(dir.normalized, Vector3.up);
+
+            // 3) Extract Euler angles
+            //    Note: Unity’s Euler X = pitch, Y = yaw
+            Vector3 euler = lookRot.eulerAngles;
+            float targetPitch = euler.x;
+            float targetYaw = euler.y;
+
+            // 4) Clamp pitch to your camera’s allowed vertical range
+            //    (optional—use your existing min/max angles)
+            targetPitch = Mathf.Clamp(
+                // convert from [0..360] to signed (–180..+180) for clamping
+                NormalizeAngle(targetPitch),
+                settings.minVerticalAngle,
+                settings.maxVerticalAngle
+            );
+
+            // 5) Store into your internal fields so later smoothing/recoil still works
+            rotationX = targetRotationX = targetPitch;
+            rotationY = targetRotationY = targetYaw;
+
+            // 6) Apply immediately
+            transform.rotation = Quaternion.Euler(targetRotationX, targetRotationY, 0);
+        }
+
+        /// <summary>
+        /// Converts 0–360 range to –180..+180.
+        /// </summary>
+        private float NormalizeAngle(float angle)
+        {
+            if (angle > 180f) angle -= 360f;
+            return angle;
+        }
 
         IEnumerator CameraRotDelay()
         {
-            var movDist = Vector3.Distance(previousPos, followTarget.transform.position);
+            var movDist = Vector3.Distance(previousPos, currentCameraTypeSettings.defaultSettings.overridedFollowTarget.transform.position);
             if (movDist > 0.001f)
             {
                 if (!moving)
@@ -335,19 +407,21 @@ namespace FS_ThirdPerson
             cameraRotSmooth = Mathf.Lerp(cameraRotSmooth, !inDelay ? 25 : 5, Time.deltaTime);
             yRot = Mathf.Lerp(yRot, yRot + input.DirectionInput.x * invertXVal * 2, Time.deltaTime * cameraRotSmooth);
         }
+
+
     }
+
 
     [System.Serializable]
     public class CameraSettings : ISerializationCallbackReceiver
     {
-        public Transform followTarget;
         public float distance = 2.5f;
         public Vector3 framingOffset = new Vector3(0, 1.5f, 0);
-        public float followSmoothTime = 0.2f;
+        public float followSmoothTime = 0;
 
         public Vector2 localRotationOffset;
 
-        [Range(0, 1)]
+        [Range(0, 10)]
         public float sensitivity = 0.6f;
 
         public float minVerticalAngle = -45;
@@ -357,7 +431,9 @@ namespace FS_ThirdPerson
         public bool invertY = true;
 
         public bool enableCameraCollisions = true;
-        public float minDistanceFromTarget = 0.2f;
+        public float minDistanceFromTarget = 0f;
+        public Transform overridedFollowTarget;
+
 
         [SerializeField, HideInInspector]
         private bool serialized = false;
@@ -367,13 +443,11 @@ namespace FS_ThirdPerson
             {
                 distance = 2.5f;
                 framingOffset = new Vector3(0, 1.5f, 0);
-                followSmoothTime = 0.2f;
                 sensitivity = 0.6f;
                 minVerticalAngle = -45;
                 maxVerticalAngle = 70;
                 invertY = true;
                 enableCameraCollisions = true;
-                minDistanceFromTarget = 0.2f;
             }
         }
 
@@ -391,6 +465,19 @@ namespace FS_ThirdPerson
     {
         public CameraState state;
         public CameraSettings settings;
+    }
+
+    [System.Serializable]
+    public class CameraTypeSettings
+    {
+        [Tooltip("Default settings of the camera. You can override these settings based on the state of the player.")]
+        public CameraSettings defaultSettings;
+        [Tooltip("List of override camera settings for different states.")]
+        public List<OverrideSettings> overrideCameraSettings;
+        [Tooltip("Smooth time to use when camera distance is changed.")]
+        public float distanceSmoothTime = 0;
+        [Tooltip("Smooth time to use when the framing offset is changed.")]
+        public float framingSmoothTime = 0;
     }
 
     // This should be in the same order as SystemState

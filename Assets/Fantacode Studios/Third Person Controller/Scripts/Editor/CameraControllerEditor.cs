@@ -4,17 +4,17 @@ using System.Collections.Generic;
 namespace FS_ThirdPerson
 {
 
-    [CustomEditor(typeof(CameraController))]
+    //[CustomEditor(typeof(CameraController))]
     public class CameraControllerEditor : Editor
     {
-        SerializedProperty followTarget;
+        SerializedProperty playerTransform;
         SerializedProperty defaultSettings;
-        SerializedProperty advancedCameraRotation;
+        //SerializedProperty advancedCameraRotation;
         SerializedProperty collisionLayers;
         SerializedProperty lockCursor;
         SerializedProperty distanceSmoothTime;
         SerializedProperty distanceSmoothTimeWhenOcluded;
-        SerializedProperty framingSmoothTime;
+        SerializedProperty framingSmoothTime; 
         SerializedProperty collisionPadding;
         SerializedProperty overrideCameraSettings;
         SerializedProperty nearClipPlane;
@@ -24,9 +24,9 @@ namespace FS_ThirdPerson
 
         private void OnEnable()
         {
-            followTarget = serializedObject.FindProperty("followTarget");
+            playerTransform = serializedObject.FindProperty("playerTransform");
             defaultSettings = serializedObject.FindProperty("defaultSettings");
-            advancedCameraRotation = serializedObject.FindProperty("advancedCameraRotation");
+            //advancedCameraRotation = serializedObject.FindProperty("advancedCameraRotation");
             collisionLayers = serializedObject.FindProperty("collisionLayers");
             lockCursor = serializedObject.FindProperty("lockCursor");
             distanceSmoothTime = serializedObject.FindProperty("distanceSmoothTime");
@@ -45,7 +45,7 @@ namespace FS_ThirdPerson
             EditorGUILayout.LabelField("Camera Controller Settings", EditorStyles.boldLabel);
 
             // Target and Default Settings
-            EditorGUILayout.PropertyField(followTarget, new GUIContent("Follow Target", "Target to follow"));
+            EditorGUILayout.PropertyField(playerTransform);
             EditorGUILayout.PropertyField(defaultSettings, new GUIContent("Default Settings", "Default settings for the camera. You can override these based on the player's state."));
 
             EditorGUILayout.Space();
@@ -55,7 +55,7 @@ namespace FS_ThirdPerson
             if (showAdvancedSettings)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(advancedCameraRotation, new GUIContent("Advanced Camera Rotation", "If turned on, the camera will rotate when the player moves sideways."));
+                //EditorGUILayout.PropertyField(advancedCameraRotation, new GUIContent("Advanced Camera Rotation", "If turned on, the camera will rotate when the player moves sideways."));
                 EditorGUILayout.PropertyField(lockCursor, new GUIContent("Lock Cursor", "This value must be set before starting play mode. It cannot be changed while the game is running."));
                 EditorGUILayout.PropertyField(nearClipPlane, new GUIContent("Near Clip Plane", "This value must be set before starting play mode. It cannot be changed while the game is running."));
                 EditorGUI.indentLevel--;

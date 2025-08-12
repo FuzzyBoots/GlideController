@@ -43,10 +43,6 @@ namespace FS_ThirdPerson
                 {
                     EditorGUIUtility.SetIconForObject(obj, icon);
                 }
-                else if (icon == null)
-                {
-                    //Debug.LogError($"Custom icon not found at the specified path: {iconAttribute.IconPath} for {objectType.Name}");
-                }
             }
         }
     }

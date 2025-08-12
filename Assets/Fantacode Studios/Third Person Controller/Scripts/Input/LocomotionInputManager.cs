@@ -18,6 +18,8 @@ namespace FS_ThirdPerson
         [SerializeField] KeyCode selectKey = KeyCode.E;
         [SerializeField] KeyCode backKey = KeyCode.Escape;
         [SerializeField] KeyCode crouchKey = KeyCode.C;
+        [SerializeField] KeyCode cycleToPreviousKey = KeyCode.Alpha3;
+        [SerializeField] KeyCode cycleToNextKey = KeyCode.Alpha4;
 
 
         [Header("Buttons")]
@@ -30,6 +32,9 @@ namespace FS_ThirdPerson
         [SerializeField] string selectButton;
         [SerializeField] string backButton;
         [SerializeField] string crouchButton;
+        [SerializeField] string cycleToPreviousItemButton;
+        [SerializeField] string cycleToNextItemButton;
+
 
         public bool JumpKeyDown { get; set; }
         public bool Drop { get; set; }
@@ -41,6 +46,9 @@ namespace FS_ThirdPerson
         public bool QuickSwitchItemDown { get; set; }
         public bool QuickSwitchItemUp { get; set; }
         public bool Crouch { get; set; }
+        public bool CycleToPreviousItem { get; set; }
+        public bool CycleToNextItem { get; set; }
+
 
         // Navigation
         public Vector2 NavigationInput { get; set; }
@@ -73,8 +81,6 @@ namespace FS_ThirdPerson
             input.Disable();
         }
 #endif
-
-
         private void Update()
         {
             HandleNavigationInput();
@@ -86,6 +92,8 @@ namespace FS_ThirdPerson
 
             // Other inputs should not worked when paused
             if (Time.deltaTime == 0) return;
+
+            HandleItemCycling();
 
             //Horizontal and Vertical Movement
             HandleDirectionalInput();
@@ -129,7 +137,7 @@ namespace FS_ThirdPerson
 #else
             float x = Input.GetAxis("Mouse X");
             float y = Input.GetAxis("Mouse Y");
-            CameraInput = new Vector2(x, y);
+            CameraInput = new Vector2(x, y) * 10;
 #endif
         }
 
@@ -281,6 +289,19 @@ namespace FS_ThirdPerson
                 return Input.GetButtonUp(buttonName);
             else
                 return false;
+        }
+        private void HandleItemCycling()
+        {
+#if inputsystem
+            CycleToPreviousItem = input.Locomotion.CyclePreviousItem.WasPressedThisFrame();
+            CycleToNextItem = input.Locomotion.CycleNextItem.WasPressedThisFrame();
+#else
+            CycleToPreviousItem = Input.GetKeyDown(cycleToPreviousKey) || 
+                (!string.IsNullOrEmpty(cycleToPreviousItemButton) && Input.GetButtonDown(cycleToPreviousItemButton));
+            
+            CycleToNextItem = Input.GetKeyDown(cycleToNextKey) || 
+                (!string.IsNullOrEmpty(cycleToNextItemButton) && Input.GetButtonDown(cycleToNextItemButton));
+#endif
         }
     }
 }

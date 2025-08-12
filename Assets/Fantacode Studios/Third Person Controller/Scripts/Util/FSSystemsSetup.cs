@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using FS_ThirdPerson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,16 +9,17 @@ using UnityEditorInternal;
 using UnityEngine;
 using AnimatorController = UnityEditor.Animations.AnimatorController;
 
-namespace FS_ThirdPerson
+namespace FS_Core
 {
     public partial class FSSystemsSetup : MonoBehaviour
     {
         public static string welcomeWindowOpenKey = "FS_WelcomeWindow_Opened";
-        static FSSystemInfo ThirdPersonControllerSystemSetup = new FSSystemInfo
+        public static FSSystemInfo ThirdPersonControllerSystemSetup = new FSSystemInfo
         (
             characterType: CharacterType.Player,
-            enabled: true,
-            name: "Locomotion System",
+            selected: true,
+            systemName: "Locomotion System",
+            displayName: "Locomotion",
 
             systemProjectSettings: new SystemProjectSettingsData
             (
@@ -46,12 +48,16 @@ namespace FS_ThirdPerson
             this.enabled = false;
         }
 
-
-        public Dictionary<string, FSSystemInfo> FSSystems = new Dictionary<string, FSSystemInfo>();
+        // Filtered systems by current selected charcater type from window
+        public Dictionary<string, FSSystemInfo> CurrentFSSystemsForSetup = new Dictionary<string, FSSystemInfo>();
+        // All installed FS Systems
+        public Dictionary<string, FSSystemInfo> AllInstalledSystems = new Dictionary<string, FSSystemInfo>();
 
 
         public void FindSystem()
         {
+            AllInstalledSystems.Clear();
+            CurrentFSSystemsForSetup.Clear();
             FieldInfo[] fields = GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static);
 
             foreach (var field in fields)
@@ -64,70 +70,59 @@ namespace FS_ThirdPerson
 
                     if (system != null)
                     {
-                        FSSystems.TryAdd(field.Name, system);
+                        if(system.characterType == FSSystemsSetupEditorWindow.characterType)
+                            CurrentFSSystemsForSetup.TryAdd(field.Name, system);
+                        AllInstalledSystems.TryAdd(field.Name, system);
                     }
                 }
+            }
+        }
+        public void EnableSystems(params string[] systemNames)
+        {
+            foreach (var s in CurrentFSSystemsForSetup)
+            {
+                if(systemNames.Contains(s.Value.systemName))
+                    s.Value.selected = true;
+                else
+                    s.Value.selected = false;
             }
         }
 
         /// <summary>
         /// Loads the prefab from Resources and copies all its components to this GameObject.
         /// </summary>
-        public GameObject CopyComponentsAndAnimControllerFromPrefab(string prefabName, AnimatorMergerUtility animatorMergerUtility, GameObject playerObj)
+        public GameObject CopyComponentsAndAnimControllerFromPrefab(string prefabName, AnimatorMergerUtility animatorMergerUtility, GameObject characterObject)
         {
             if (!string.IsNullOrEmpty(prefabName))
             {
                 // Load the prefab from Resources
                 GameObject prefab = Resources.Load<GameObject>(prefabName);
-
+                bool isPlayer = FSSystemsSetupEditorWindow.characterType == CharacterType.Player;
                 if (prefab != null)
                 {
-                    var prefabPlayer = prefab.GetComponentInChildren<PlayerController>().gameObject;
+                    var characterPrefab = isPlayer ? prefab.GetComponentInChildren<PlayerController>().gameObject: prefab;
 
-                    var animatorController = prefabPlayer.GetComponent<Animator>().runtimeAnimatorController as AnimatorController;
+                    var animatorController = characterPrefab.GetComponent<Animator>().runtimeAnimatorController as AnimatorController;
 
                     animatorMergerUtility.MergeAnimatorControllers(animatorController);
-                    // Get all components from the prefab
-                    Component[] components = prefabPlayer.GetComponents<Component>();
 
-                    foreach (Component sourceComp in components)
-                    {
-                        Type componentType = sourceComp.GetType(); 
-                        if (playerObj.GetComponent(componentType) != null) continue; 
+                    FSSystemsSetupEditorWindow.CopyComponents(characterPrefab, characterObject);
 
-                        System.Type type = sourceComp.GetType();
-                        Component targetComp = playerObj.GetComponent(type);
-
-                        if (targetComp == null)
-                        {
-                            targetComp = playerObj.AddComponent(type);
-                            ComponentUtility.CopyComponent(sourceComp);
-                            ComponentUtility.PasteComponentValues(targetComp);
-                            //EditorUtility.CopySerializedIfDifferent(sourceComp, targetComp);
-                        }
-
-                    }
-                    var managedScript = playerObj.GetComponents<SystemBase>().ToList();
-                    managedScript.Sort((x, y) => x.Priority.CompareTo(y.Priority));
-                    playerObj.GetComponent<PlayerController>().managedScripts = managedScript;
-                    //playerObj.layer = prefabPlayer.layer;
-                    //playerObj.name = "FS Player";
+                    //if (isPlayer)
+                    //{
+                    //    var managedScript = characterObject.GetComponents<SystemBase>().ToList();
+                    //    managedScript.Sort((x, y) => x.Priority.CompareTo(y.Priority));
+                    //    characterObject.GetComponent<PlayerController>().managedScripts = managedScript;
+                    //}
                 }
-                //else
-                //{
-                //    Debug.LogError($"Prefab '{prefabName}' not found in Resources.");
-                //}
-
-                
                 return prefab;
             }
             else
             {
-                Debug.LogWarning("Prefab name is not specified.");
-            }
+                //Debug.LogWarning("Prefab name is not specified.");
+            } 
             return null;
         }
-
 
         public void ImportProjectSettings()
         {
@@ -135,7 +130,7 @@ namespace FS_ThirdPerson
             SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
             SerializedProperty layersProp = tagManager.FindProperty("layers");
 
-            foreach (var systemProjectSettingsData in FSSystems.Values)
+            foreach (var systemProjectSettingsData in CurrentFSSystemsForSetup.Values)
             {
                 if (systemProjectSettingsData.systemProjectSettings == null) 
                     continue;
@@ -182,6 +177,9 @@ namespace FS_ThirdPerson
                 }
 
                 systemProjectSettingsData.systemProjectSettings.extraSetupAction?.Invoke();
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
         }
 
@@ -194,29 +192,32 @@ namespace FS_ThirdPerson
     }
     public class FSSystemInfo
     {
-        //public bool isSystemBase;
         public CharacterType characterType;
-        public bool enabled;
-        public string name;
+        public bool selected;
+        public string systemName;
+        public string displayName;
         public string prefabName;
         public string mobileControllerPrefabName;
-        public Action<GameObject, GameObject, GameObject> setupExtraActions;
+        public Action<GameObject, GameObject, GameObject> extraSetupActionPlayer;
+        public Action<GameObject, GameObject> extraSetupActionAI;
         public SystemProjectSettingsData systemProjectSettings;
         public string welcomeEditorShowKey;
-        public FSSystemInfo(CharacterType characterType, string name, string prefabName = "", bool enabled = false, string welcomeEditorShowKey = "", SystemProjectSettingsData systemProjectSettings = null, string mobileControllerPrefabName = "", Action<GameObject, GameObject, GameObject> setupExtraActions = null)
+        public FSSystemInfo(CharacterType characterType, string systemName, string displayName = "", string prefabName = "", bool selected = false, string welcomeEditorShowKey = "", SystemProjectSettingsData systemProjectSettings = null, string mobileControllerPrefabName = "", Action<GameObject, GameObject, GameObject> extraSetupActionPlayer = null, Action<GameObject, GameObject> extraSetupActionAI = null)
         {
-            //this.isSystemBase = isSystemBase;
             this.characterType = characterType;
-            this.enabled = enabled;
-            this.name = name;
+            this.selected = selected;
+            this.systemName = systemName;
+            this.displayName = displayName;
             this.prefabName = prefabName;
             this.systemProjectSettings = systemProjectSettings;
             this.mobileControllerPrefabName = mobileControllerPrefabName;
 
-            if (setupExtraActions != null)
-                this.setupExtraActions = setupExtraActions;
+            if (extraSetupActionPlayer != null)
+                this.extraSetupActionPlayer = extraSetupActionPlayer;
+            if (extraSetupActionAI != null)
+                this.extraSetupActionAI = extraSetupActionAI;
 
-            if(!string.IsNullOrEmpty(welcomeEditorShowKey))
+            if (!string.IsNullOrEmpty(welcomeEditorShowKey))
                 this.welcomeEditorShowKey = welcomeEditorShowKey;
             else
                 this.welcomeEditorShowKey = FSSystemsSetup.welcomeWindowOpenKey;

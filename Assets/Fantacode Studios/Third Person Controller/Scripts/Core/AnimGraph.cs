@@ -8,7 +8,7 @@ using UnityEngine.Playables;
 
 namespace FS_ThirdPerson
 {
-    public enum Mask { Null, Arm, UpperBody, RightHand, UpperBodyWithRoot, RightArm }
+    public enum Mask { Null, Arm, UpperBody, RightHand, LeftHand, UpperBodyWithRoot, RightArm , UpperBodyWithoutArm}
 
     public enum UpdateMode { Normal, Unscaled };
 
@@ -28,10 +28,14 @@ namespace FS_ThirdPerson
         AvatarMask armMask;
         AvatarMask upperBodyMask;
         AvatarMask rightHandMask;
-        AvatarMask shootingMask;
+        AvatarMask upperBodyWithRoot;
         AvatarMask rightArm;
-
+        AvatarMask leftHandMask;
+        AvatarMask upperBodyWithoutArm;
+        bool currentAnimationIsAdditive = false;
         UpdateMode updateMode;
+
+        public PlayableGraph Graph => graph;
 
         public float DeltaTime => updateMode == UpdateMode.Unscaled? Time.unscaledDeltaTime : Time.deltaTime;
 
@@ -52,7 +56,6 @@ namespace FS_ThirdPerson
         public AnimGraphClipInfo currentClipInfo => currentClipStateInfo.currentClipInfo;
 
         Playable currentPlayableMixer;
-
         public void Awake()
         {
             if (animator == null)
@@ -163,37 +166,51 @@ namespace FS_ThirdPerson
             for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
                 rightHandMask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i, false);
             rightHandMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightFingers, true);
+            rightHandMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightHandIK, true);
 
-            shootingMask = new AvatarMask();
+            leftHandMask = new AvatarMask();
             for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
-                shootingMask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i, false);
+                leftHandMask.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i, false);
+            leftHandMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftFingers, true);
+            leftHandMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftHandIK, true);
 
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightArm, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightFingers, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftFingers, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftArm, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightHandIK, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftHandIK, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Body, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Head, true);
-            shootingMask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Root, true);
+            upperBodyWithRoot = new AvatarMask();
+            for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
+                upperBodyWithRoot.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i, false);
+
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightArm, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightFingers, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftFingers, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftArm, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.RightHandIK, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftHandIK, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Body, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Head, true);
+            upperBodyWithRoot.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Root, true);
+
+            upperBodyWithoutArm = new AvatarMask();
+            for (int i = 0; i < (int)AvatarMaskBodyPart.LastBodyPart; i++)
+                upperBodyWithoutArm.SetHumanoidBodyPartActive((AvatarMaskBodyPart)i, false);
+
+            upperBodyWithoutArm.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Body, true);
+            upperBodyWithoutArm.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Head, true);
         }
 
         #endregion
 
         #region Crossfade methods
 
-        public void Crossfade(AnimationClip clip, AnimGraphClipInfo clipInfo = null, bool transitionBack = true, Mask mask = Mask.Null, bool isAdditiveLayerAnimation = false, float transitionIn = .2f, float transitionOut = .2f, float animationSpeed = 1, Action<float, float> onAnimationUpdate = null, Action OnComplete = null, params ActionData[] actions)
+        public void Crossfade(AnimationClip clip, AnimGraphClipInfo clipInfo = null, bool transitionBack = true, Mask mask = Mask.Null, bool isAdditiveLayerAnimation = false, float transitionIn = .2f, float transitionOut = .2f, float animationSpeed = 1, Action<float, float> onAnimationUpdate = null, Action OnComplete = null,bool overridableByAnimator = false, params ActionData[] actions)
         {
-            StartCoroutine(CrossfadeAsync(clip, clipInfo, false, false, transitionBack, mask, isAdditiveLayerAnimation, transitionIn, transitionOut, animationSpeed, onAnimationUpdate, OnComplete, actions));
+            StartCoroutine(CrossfadeAsync(clip, clipInfo, false, false, transitionBack, mask, isAdditiveLayerAnimation, transitionIn, transitionOut, animationSpeed, onAnimationUpdate, OnComplete, overridableByAnimator, actions));
         }
 
         public void PlayLoopingAnimation(AnimationClip clip, AnimGraphClipInfo clipInfo = null, Mask mask = Mask.Null, bool isActAsAnimatorOutput = false, bool isAdditiveLayerAnimation = false, float transitionIn = .2f, float transitionOut = .2f, float animationSpeed = 1, Action<float, float> onAnimationUpdate = null, Action OnComplete = null)
         {
-            StartCoroutine(CrossfadeAsync(clip, clipInfo, true, isActAsAnimatorOutput, false, mask, isAdditiveLayerAnimation, transitionIn, transitionOut, animationSpeed, onAnimationUpdate, OnComplete));
+            StartCoroutine(CrossfadeAsync(clip, clipInfo, true, isActAsAnimatorOutput, false, mask, isAdditiveLayerAnimation, transitionIn, transitionOut, animationSpeed, onAnimationUpdate, OnComplete,overridableByAnimator: false));
         }
 
-        public IEnumerator CrossfadeAsync(AnimationClip clip, AnimGraphClipInfo clipInfo = null, bool isLoopingAnimation = false, bool isActAsAnimatorOutput = false, bool transitionBack = true, Mask mask = Mask.Null, bool isAdditiveLayerAnimation = false, float transitionIn = .2f, float transitionOut = .2f, float animationSpeed = 1, Action<float, float> onAnimationUpdate = null, Action OnComplete = null, params ActionData[] actions)
+        public IEnumerator CrossfadeAsync(AnimationClip clip, AnimGraphClipInfo clipInfo = null, bool isLoopingAnimation = false, bool isActAsAnimatorOutput = false, bool transitionBack = true, Mask mask = Mask.Null, bool isAdditiveLayerAnimation = false, float transitionIn = .2f, float transitionOut = .2f, float animationSpeed = 1, Action<float, float> onAnimationUpdate = null, Action OnComplete = null, bool overridableByAnimator = false, params ActionData[] actions)
         {
             if (clipInfo != null)
             {
@@ -209,7 +226,6 @@ namespace FS_ThirdPerson
             {
                 yield break;
             }
-
 
             var currentMixer = GetActionMixer(isLoopingAnimation);
 
@@ -256,17 +272,32 @@ namespace FS_ThirdPerson
             if (isActAsAnimatorOutput)
                 animatorOutput = clipMixer;
 
-            yield return UpdateWeights(clip, clipMixer, currentMixer, clipInfo, isLoopingAnimation, transitionBack, avatarMask != null, transitionIn, transitionOut, animationSpeed, onAnimationUpdate, actions);
+            yield return UpdateWeights(clip, clipPlayable,clipMixer, currentMixer, clipInfo, isLoopingAnimation, isAdditiveLayerAnimation, transitionBack, avatarMask != null, transitionIn, transitionOut, animationSpeed, onAnimationUpdate, overridableByAnimator , actions);
 
 
             if (transitionBack)
             {
-                yield return new WaitUntil(() => currentMixer.GetInput(0).Equals(clipMixer) || !currentMixer.GetOutput(0).IsValid());
-                StartCoroutine(ConnectPlayables(nonLoopActionMixer, clipMixer.GetInput(0)));
+                if (clipMixer.IsValid())
+                {
+                    // Determine the correct input mixer:
+                    // - If the current mixer is the loopActionMixer, use animatorMixer (to bypass loop).
+                    // - Otherwise, continue using loopActionMixer for normal chaining.
+                    var inputMixer = currentMixer.Equals(loopActionMixer) ? animatorMixer : loopActionMixer;
+
+                    // Choose the correct playable to connect:
+                    // - If this is an additive layer animation, connect to the base of the clipMixer (clipMixer.GetInput(0))
+                    // - Otherwise, connect to the selected inputMixer
+                    var m = isAdditiveLayerAnimation ? clipMixer.GetInput(0) : inputMixer;
+
+                    // Start coroutine to connect the output of this clip to the next mixer in the chain
+                    StartCoroutine(ConnectPlayables(clipMixer.GetOutput(0), m));
+
+                }
             }
             else if (!isLoopingAnimation)
             {
-                StartCoroutine(ChangePreviousPlayableWeight(currentMixer, clipMixer));
+                if(!currentAnimationIsAdditive)
+                    StartCoroutine(ChangePreviousPlayableWeight(currentMixer, clipMixer));
             }
 
             OnComplete?.Invoke();
@@ -391,6 +422,8 @@ namespace FS_ThirdPerson
 
             while (timer < transitionTime)
             {
+                //ResetTransitionPose();
+
                 weight = Mathf.Lerp(1, 0, timer / transitionTime);
                 if (timer >= transitionTime - DeltaTime) weight = 0;
                 animatorMixer.SetInputWeight(sourPort, weight);
@@ -460,47 +493,50 @@ namespace FS_ThirdPerson
 
         IEnumerator ConnectPlayables(Playable outputMixer, Playable inputMixer)
         {
+            //yield break;
             if (!outputMixer.IsValid() || !inputMixer.IsValid() || outputMixer.GetInput(0).Equals(inputMixer))
                 yield break;
 
             // Collect all intermediate playables
             HashSet<Playable> intermediates = new HashSet<Playable>();
-            CollectPlayables(outputMixer.GetInput(0), inputMixer, intermediates);
+            CollectPlayables(outputMixer.GetInput(0), inputMixer,ref intermediates);
 
-            var mixer = outputMixer.GetInput(0);
-            var clip = mixer.GetInput(1);
+            //var mixer = outputMixer.GetInput(0);
+            //var clip = mixer.GetInput(1);
 
-            float duration = mixer.GetInputWeight(0) < .5f ? 0f : .2f;
-            float firstInputStartWeight = mixer.GetInputWeight(0);
-            float secondInputStartWeight = mixer.GetInputWeight(1);
-            var prevWeight = outputMixer.GetInputWeight(0);
-
+            float duration = .2f;
+            //float firstInputStartWeight = mixer.GetInputWeight(0);
+            //float secondInputStartWeight = mixer.GetInputWeight(1);
+            var prevWeightFirst = outputMixer.GetInputWeight(0);
+            var prevWeightSecond = (outputMixer.Equals(nonLoopActionMixer) || outputMixer.Equals(loopActionMixer))? 1 : outputMixer.GetInputWeight(1);
             outputMixer.DisconnectInput(0);
             inputMixer.GetOutput(0).DisconnectInput(0);
             outputMixer.ConnectInput(0, inputMixer, 0);
-            outputMixer.SetInputWeight(0, prevWeight);
+            outputMixer.SetInputWeight(0, prevWeightFirst);
+            
             graph.Evaluate();
-            animator.Update(0);
+            yield return null;
             ResetTransitionPose();
+            //animator.Update(0);
+
             float timer = 0;
             float weight = 0;
 
-            while (timer < duration && mixer.IsValid())
-            {
-                //ResetTransitionPose();
-                weight = Mathf.Lerp(secondInputStartWeight, 0, timer / duration);
-                if (timer >= duration - DeltaTime) weight = 0;
+            //while (timer < duration)
+            //{
+            //    weight = Mathf.Lerp(prevWeightFirst, 1, timer / duration);
+            //    if (timer >= duration - DeltaTime) weight = 0;
 
-                if (1 - weight > mixer.GetInputWeight(0))
-                    outputMixer.SetInputWeight(0, 1 - weight);
-                outputMixer.SetInputWeight(1, weight);
+            //    if (1 - weight > prevWeightFirst)
+            //        outputMixer.SetInputWeight(0, 1 - weight);
+            //    outputMixer.SetInputWeight(1, weight);
 
-                timer += DeltaTime;
-                yield return null;
-            }
+            //    timer += DeltaTime;
+            //    yield return null;
+            //}
 
-            outputMixer.SetInputWeight(0, 1);
-            outputMixer.SetInputWeight(1, 0);
+            outputMixer.SetInputWeight(0, prevWeightFirst);
+            //outputMixer.SetInputWeight(1, 0);
 
             // Destroy all collected playables
             foreach (var intermediate in intermediates)
@@ -508,15 +544,15 @@ namespace FS_ThirdPerson
                 if (intermediate.IsValid())
                     intermediate.Destroy();
             }
+            //outputMixer.GetInput(0).Destroy();
 
-            if (mixer.IsValid())
-                mixer.Destroy();
-            if (clip.IsValid())
-                clip.Destroy();
-
+            //if (mixer.IsValid())
+            //    mixer.Destroy();
+            //if (clip.IsValid())
+            //    clip.Destroy();
             yield break;
         }
-        void CollectPlayables(Playable current, Playable target, HashSet<Playable> collected)
+        void CollectPlayables(Playable current, Playable target,ref HashSet<Playable> collected)
         {
             if (!current.IsValid() || collected.Contains(current) || current.Equals(target))
                 return;
@@ -526,7 +562,7 @@ namespace FS_ThirdPerson
             int inputCount = current.GetInputCount();
             for (int i = 0; i < inputCount; i++)
             {
-                CollectPlayables(current.GetInput(i), target, collected);
+                CollectPlayables(current.GetInput(i), target,ref collected);
             }
         }
         IEnumerator LoopingAnimationTransitionback()
@@ -535,13 +571,16 @@ namespace FS_ThirdPerson
             float weight = 0;
             float transitionTime = .2f;
             var mixer = loopActionMixer.GetInput(0);
-
-            if (animatorMixer.Equals(mixer) || !mixer.Equals(currentPlayableMixer)) yield break;
-
+            if (animatorMixer.Equals(mixer) || !mixer.Equals(currentPlayableMixer))
+            {
+                yield break;
+            }
             var prevMixer = mixer.GetInput(0);
             float firstInputStartWeight = mixer.GetInputWeight(0);
             while (timer < transitionTime)
             {
+                //ResetTransitionPose();
+
                 weight = Mathf.Lerp(firstInputStartWeight, 0, timer / transitionTime);
                 if (timer >= transitionTime - DeltaTime) weight = 0;
 
@@ -551,31 +590,38 @@ namespace FS_ThirdPerson
                         mixer.SetInputWeight(0, 1 - weight);
                     mixer.SetInputWeight(1, weight);
                 }
-
                 timer += DeltaTime;
                 yield return null;
             }
-            yield return new WaitUntil(() => loopActionMixer.GetInput(0).Equals(mixer) || !mixer.IsValid());
 
             if (mixer.IsValid())
             {
-                mixer.SetInputWeight(0, 1);
-                mixer.SetInputWeight(1, 0);
-                loopActionMixer.DisconnectInput(0);
-                mixer.DisconnectInput(0);
-                loopActionMixer.ConnectInput(0, prevMixer, 0);
-                loopActionMixer.SetInputWeight(0, 1);
-                loopActionMixer.SetInputWeight(1, 0);
-                if(mixer.GetInput(1).IsValid())
-                    mixer.GetInput(1).Destroy();
-                mixer.Destroy();
-                ResetTransitionPose();
+                var inputPlayable = mixer.GetInput(0);
+                var outputPlayable = mixer.GetOutput(0);
+                StartCoroutine(ConnectPlayables(outputPlayable, inputPlayable));
             }
+            //yield return new WaitUntil(() => loopActionMixer.GetInput(0).Equals(mixer) || !mixer.IsValid());
+
+            //if (mixer.IsValid())
+            //{
+            //    mixer.SetInputWeight(0, 1);
+            //    mixer.SetInputWeight(1, 0);
+            //    loopActionMixer.DisconnectInput(0);
+            //    mixer.DisconnectInput(0);
+            //    loopActionMixer.ConnectInput(0, prevMixer, 0);
+            //    loopActionMixer.SetInputWeight(0, 1);
+            //    loopActionMixer.SetInputWeight(1, 0);
+            //    if(mixer.GetInput(1).IsValid())
+            //        mixer.GetInput(1).Destroy();
+            //    mixer.Destroy();
+            //    ResetTransitionPose();
+            //}
+            if (!loopActionMixer.GetInput(0).Equals(animatorMixer))
+                currentPlayableMixer = loopActionMixer.GetInput(0);
         }
 
-
-        IEnumerator UpdateWeights(AnimationClip clip, Playable mixer, Playable currentMixer, AnimGraphClipInfo clipInfo = null, bool isLoopingAnimation = false, bool transitionBack = true, bool isLayerMixer = false, float transitionIn = .2f,
-         float transitionOut = .2f, float animationSpeed = 1, Action<float, float> onAnimationUpdate = null, params ActionData[] actions)
+        IEnumerator UpdateWeights(AnimationClip clip,Playable clipPlayable, Playable mixer, Playable currentMixer, AnimGraphClipInfo clipInfo = null, bool isLoopingAnimation = false, bool isAdditiveLayerAnimation = false, bool transitionBack = true, bool isLayerMixer = false, float transitionIn = .2f,
+         float transitionOut = .2f, float animationSpeed = 1, Action<float, float> onAnimationUpdate = null, bool overridableByAnimator = false, params ActionData[] actions)
         {
             if (clipInfo != null)
                 clip = clipInfo.clip ?? clip; // Assign clip if clipInfo has a valid clip
@@ -610,6 +656,7 @@ namespace FS_ThirdPerson
             currentClipStateInfo.timer = timer;
             currentClipStateInfo.currentMixer = mixer;
 
+            currentAnimationIsAdditive = isAdditiveLayerAnimation;
 
             // Generate a unique identifier for the animation instance
             string uniqueId = Guid.NewGuid().ToString();
@@ -622,9 +669,11 @@ namespace FS_ThirdPerson
 
             float currentTimescale = TimeScaleOwner.Value;
 
+            var stateInfo = animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
             // Animation loop with transition in/out handling
             while (timer <= clipLength)
             {
+
                 // Apply custom animation speed settings
                 if (clipInfo.customAnimationSpeed)
                 {
@@ -636,18 +685,19 @@ namespace FS_ThirdPerson
                     else
                     {
                         animationSpeed = Mathf.Max(clipInfo.speedModifier.GetValue(normalizedTimer), 0.01f);
-                        mixer.SetSpeed(animationSpeed);
+                        if(clipPlayable.IsValid())
+                            clipPlayable.SetSpeed(animationSpeed);
                     }
                 }
-
-
-
 
                 // Invoke animation events at the correct time
                 foreach (var item in clipInfo.events)
                 {
                     if (item.normalizedTime >= normalizedTimer && item.normalizedTime <= normalizedTimer + DeltaTime * animationSpeed)
+                    {
                         item.InvokeCustomAnimationEvent(gameObject);
+                        item.unityEvent.Invoke();
+                    }
                 }
 
                 if (timer <= transitionIn)
@@ -664,19 +714,29 @@ namespace FS_ThirdPerson
                     weight = Mathf.Lerp(1, 0, (timer - (clipLength - transitionOut)) / transitionOut);
                     if (timer >= clipLength) weight = 0; // Ensure it reaches exactly 0
                 }
-
+                if ((animator.isMatchingTarget || animator.IsInTransition(0)) && overridableByAnimator)
+                {
+                    if (mixer.IsValid())
+                    {
+                        mixer.SetInputWeight(0, 1);
+                        mixer.SetInputWeight(1, 0);
+                    }
+                    yield break;
+                }
 
                 if (mixer.IsValid())
                 {
-                    if (!isLayerMixer)
+                    // Don change clip weight if the animation looping or additive
+                    if (!isLayerMixer && !isAdditiveLayerAnimation)
                         mixer.SetInputWeight(0, 1 - weight);
                     mixer.SetInputWeight(1, weight);
                 }
 
                 // Check for animation override conditions
-                if (transitionBack && (!currentMixer.GetInput(0).Equals(mixer)))
+                if (transitionBack && (!currentMixer.GetInput(0).Equals(mixer)) && !currentAnimationIsAdditive)
                 {
-                    yield return new WaitForSeconds(currentClipInfo.TranistionInAndOut.x);
+                    var waitTIme = currentClipInfo != null? currentClipInfo.TranistionInAndOut.x : .2f;
+                    yield return new WaitForSeconds(waitTIme);
                     if (mixer.IsValid())
                     {
                         mixer.SetInputWeight(0, 1);
@@ -688,7 +748,6 @@ namespace FS_ThirdPerson
                 {
                     timer += DeltaTime * animationSpeed;
                 }
-                //timer += DeltaTime * animationSpeed;
                 // Update normalized time
                 normalizedTimer = timer / clipLength;
                 currentClipStateInfo.normalizedTime = normalizedTimer;
@@ -707,13 +766,13 @@ namespace FS_ThirdPerson
                 currentClipStateInfo.timer = timer;
                 currentClipStateInfo.deltaTime = DeltaTime * animationSpeed;
                 onAnimationUpdate?.Invoke(normalizedTimer, timer);
+
                 yield return null;
             }
-
-
             foreach (var item in clipInfo.onEndAnimation)
             {
                 item.InvokeCustomAnimationEvent(this.gameObject);
+                item.unityEvent.Invoke();
             }
             currentClipStateInfo.currentClipInfo = null;
 
@@ -745,8 +804,12 @@ namespace FS_ThirdPerson
                     return upperBodyMask;
                 case Mask.RightHand:
                     return rightHandMask;
+                case Mask.LeftHand:
+                    return leftHandMask;
                 case Mask.UpperBodyWithRoot:
-                    return shootingMask;
+                    return upperBodyWithRoot;
+                case Mask.UpperBodyWithoutArm:
+                    return upperBodyWithoutArm;
                 case Mask.RightArm:
                     return rightArm;
             }
@@ -767,7 +830,9 @@ namespace FS_ThirdPerson
                 StartCoroutine(ConnectPlayables(loopActionMixer, animatorMixer));
             }
             else
+            {
                 StartCoroutine(LoopingAnimationTransitionback());
+            }
         }
         public void StopCurrentNonLoopingAnimation()
         {
@@ -795,7 +860,7 @@ namespace FS_ThirdPerson
 
         void ResetTransitionPose()
         {
-            if (transitionDatas.Count < 2) return;
+            if (transitionDatas.Count < 1) return;
             var oldPos = transform.position;
             var oldRot = transform.rotation;
             graph.Evaluate();
@@ -811,6 +876,7 @@ namespace FS_ThirdPerson
             }
             transform.position = oldPos;
             transform.rotation = oldRot;
+            transitionDatas.Clear();
         }
 
         void SaveTransitionData()

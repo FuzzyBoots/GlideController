@@ -7,14 +7,16 @@ using UnityEngine;
 
 namespace FS_Core
 {
+    public enum HitType { Any, Melee, Ranged };
 
     public class Damagable : MonoBehaviour, ISavable
     {
         AnimGraph animGraph;
 
         [field: SerializeField] public virtual float MaxHealth { get; set; } = 100;
+        [SerializeField] HitType canBeDamagedBy;
+
         public virtual float CurrentHealth { get; set; }
-        public virtual float DamageMultiplier { get; }
         public event Action OnHealthUpdated;
         public event Action OnDead;
         public virtual Damagable Parent => this;
@@ -28,8 +30,10 @@ namespace FS_Core
             itemAttacher = GetComponent<ItemAttacher>();
         }
 
-        public virtual void TakeDamage(float damage)
+        public virtual void TakeDamage(float damage, HitType damageType)
         {
+            if (canBeDamagedBy != HitType.Any && canBeDamagedBy != damageType) return;
+
             UpdateHealth(-damage);
 
             if (CurrentHealth <= 0)
@@ -37,6 +41,7 @@ namespace FS_Core
                 OnDead?.Invoke();
             }
         }
+
 
         public virtual void UpdateHealth(float hpRestore)
         {

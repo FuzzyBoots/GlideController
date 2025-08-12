@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Security;
 using UnityEngine;
 
 namespace FS_ThirdPerson
@@ -17,6 +16,7 @@ namespace FS_ThirdPerson
     {
         None, Combat, Climbing, Other
     }
+    public enum FSCameraType { FirstPerson, ThirdPerson }
 
     [DefaultExecutionOrder(-20)]
     public class PlayerController : MonoBehaviour, ISavable
@@ -28,12 +28,24 @@ namespace FS_ThirdPerson
         public Dictionary<SystemState, SystemBase> systems = new Dictionary<SystemState, SystemBase>();
 
         [field: SerializeField] public SystemState CurrentSystemState { get; private set; }
+        public FSCameraType CameraType { get; set; } = FSCameraType.ThirdPerson;
+        public Action<FSCameraType> OnCameraTypeChanged;
+
+        public SystemState CurrentEquippedSystemState => CurrentEquippedSystem.State;
+
+        [HideInInspector]
+        [SerializeField]
+        private string _editorSearchString = string.Empty;
+
         public SystemState PreviousSystemState { get; private set; }
         public SystemState DefaultSystemState => SystemState.Locomotion;
         public SystemState FocusedSystemState => FocusedScript == null ? DefaultSystemState : FocusedScript.State;
 
         public Quaternion CameraPlanarRotation => Quaternion.LookRotation(Vector3.Scale(cameraGameObject.transform.forward, new Vector3(1, 0, 1)));
+        public bool AlignTargetWithCameraForward { get; set; }
         public GameObject cameraGameObject { get; set; }
+        public CameraSettings CurrentCameraSettings { get; set; }
+
 
         public Animator animator { get; set; }
         ItemEquipper equippableItemController;
@@ -41,6 +53,7 @@ namespace FS_ThirdPerson
         public Damagable Damagable { get; private set; }
 
         public Action<float, float> OnStartCameraShake;
+        public Action<Vector3> CameraLookAtPoint;
         public Action<CameraSettings> SetCustomCameraState;
         public Action<RecoilInfo> CameraRecoil;
         public Action<float, float> OnLand;
@@ -48,6 +61,10 @@ namespace FS_ThirdPerson
         public bool IsInAir { get; set; }
         public bool PreventRotation { get; set; }
         public bool PreventFallingFromLedge { get; set; } = true;
+        public bool PreventCameraShake { get; set; } = false;
+        public bool PreventVerticalJump { get; set; } = false;
+        public Action OnCameraLateUpdate { get; set; }
+        public bool IsDead => Damagable.CurrentHealth <= 0;
 
         public bool IsItemEquipped => equippableItemController.EquippedItem != null;
         public EquippableSystemBase CurrentEquippedSystem { get; private set; }
@@ -121,10 +138,12 @@ namespace FS_ThirdPerson
             {
                 foreach (var script in CoreSystems)
                 {
+                    if (FocusedScript != null) return;
                     if (script.enabled && script is not EquippableSystemBase)
                         script.HandleFixedUpdate();
                 }
-                CurrentEquippedSystem?.HandleFixedUpdate();
+                if (FocusedScript == null)
+                    CurrentEquippedSystem?.HandleFixedUpdate();
             }
         }
 
@@ -143,10 +162,12 @@ namespace FS_ThirdPerson
             {
                 foreach (var script in CoreSystems)
                 {
+                    if (FocusedScript != null) return;
                     if (script.enabled && script is not EquippableSystemBase)
                         script.HandleUpdate();
                 }
-                CurrentEquippedSystem?.HandleUpdate();
+                if(FocusedScript == null)
+                    CurrentEquippedSystem?.HandleUpdate();
             }
         }
 
@@ -199,8 +220,8 @@ namespace FS_ThirdPerson
         public void ResetState()
         {
             //CurrentSystemState = equippableItemController.CurrentEquippableItemRight != null || equippableItemController.CurrentEquippableItemLeft != null ? PreviousSystemState : DefaultSystemState;
-            PreviousSystemState = CurrentSystemState;
-            CurrentSystemState = DefaultSystemState;
+            PreviousSystemState = CurrentSystemState; 
+            CurrentSystemState = DefaultSystemState; 
 
             //if (CurrentSystemState != DefaultSystemState)
             //    managedScripts.FirstOrDefault(s => s.State == CurrentSystemState)?.FocusScript();

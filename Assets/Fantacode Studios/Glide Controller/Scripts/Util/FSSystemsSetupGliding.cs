@@ -1,15 +1,16 @@
 #if UNITY_EDITOR
 using UnityEditor;
 
-namespace FS_ThirdPerson
+namespace FS_Core
 {
     public partial class FSSystemsSetup
     {
         public static FSSystemInfo GlidingSystemSetup = new FSSystemInfo
         (
             characterType: CharacterType.Player,
-            enabled: false,
-            name: "Gliding System",
+            selected: false,
+            systemName: "Gliding System",
+            displayName: "Gliding",
             prefabName: "Gliding Controller",
             welcomeEditorShowKey: "GlidingSystem_WelcomeWindow_Opened",
             mobileControllerPrefabName: ""
