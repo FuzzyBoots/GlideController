@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a80297d2306d1e47b3dd6486a9bf1d6, type: 3}
+  m_Name: Glider
+  m_EditorClassIdentifier: 
+  profileName: Glider
+  pitchSpeed: 5
+  rollSpeed: 5
+  yawFromRoll: 1.5
+  maxPitchAngle: 45
+  minPitchAngle: 30
+  baseDrag: 0.1
+  verticalDragBonus: 0.1
+  liftCoefficient: 20
+  forwardThrustFactor: 1.5
+  terminalVelocity: -60
+  maxSpeed: 80
+  canStall: 1
+  stallAngle: 25
+  stallSpeed: 15
