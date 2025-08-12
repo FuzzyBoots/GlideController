@@ -121,18 +121,15 @@ public class GliderController2 : SystemBase
 
         if (playerController.IsInAir && GlideInputHolding)
         {
-            Debug.Log("In Air and input down");
-            Debug.Log($"InAction: {InAction} and High Enough: {HighEnough()}");
             if (!InAction && HighEnough())
             {
                 StartCoroutine(StartGliding());
             }
             else if (InAction)
             {
-                // Debug.Log($"InAction: {InAction} and HighEnouch: {HighEnough()}");
                 StartCoroutine(StopGliding());
             }
-        } // Should we have a setup for !HighEnough?
+        }
 
         if (InAction && HighEnough())
         {
@@ -140,8 +137,7 @@ public class GliderController2 : SystemBase
         }
         else if (InAction && !HighEnough())
         {
-            Debug.Log("Not High Enough");
-            StartCoroutine(StopGliding());
+            StartCoroutine(HandleLandingMomentum());
         }
     }
 
@@ -236,8 +232,8 @@ public class GliderController2 : SystemBase
 
     private bool HighEnough()
     {
-        bool grounded = CheckGround();
-        return !grounded;
+        Vector3 projectedPosition = transform.position + _velocityVector * Time.deltaTime * 5; // Project 5 frames ahead
+        return !CheckGround(projectedPosition);
     }
 
     private void OnDrawGizmosSelected()
@@ -286,7 +282,6 @@ public class GliderController2 : SystemBase
         // Call the new coroutine to handle leveling out the character
         StartCoroutine(LevelOutRotation());
 
-        // StartCoroutine(HandleLandingMomentum());
         player.OnEndSystem(this);
 
     }
@@ -363,15 +358,12 @@ public class GliderController2 : SystemBase
 
     #region Landing
 
-    IEnumerator HandleLandingMomentum(bool playLandAnimation = true)
+    private IEnumerator HandleLandingMomentum()
     {
         Debug.Log("Calling HandleLandingMomentum");
-        // Get the current direction of movement, excluding the y value.
-        Vector3 currDir = _velocityVector.normalized;
-        currDir.y = 0;
-
         InAction = false;
 
+        // Play landing animation
         StartCoroutine(CrossFadeAsync("DropFallIdle", .2f, false));
 
         // Calculate the velocity required for the jump landing.
@@ -385,12 +377,14 @@ public class GliderController2 : SystemBase
             characterController.Move(_velocityVector * Time.deltaTime);
             yield return null;
         }
+
+        // Reset velocity after landing
         _velocityVector = Vector3.zero;
     }
 
-    bool CheckGround()
+    private bool CheckGround(Vector3 position)
     {
-        return Physics.SphereCast(transform.TransformPoint(groundCheckOffset), groundCheckRadius, Vector3.down, out _, groundCheckDistance, groundLayer);
+        return Physics.SphereCast(position + groundCheckOffset, groundCheckRadius, Vector3.down, out _, groundCheckDistance, groundLayer);
     }
 
     #endregion
