@@ -9,7 +9,8 @@ namespace FS_Core
         (
             characterType: CharacterType.Player,
             selected: false,
-            displayName: "Gliding System",
+            systemName: "Gliding System",
+            displayName: "Gliding",
             prefabName: "Gliding Controller",
             welcomeEditorShowKey: "GlidingSystem_WelcomeWindow_Opened",
             mobileControllerPrefabName: ""

@@ -46,7 +46,7 @@ namespace FS_Core
 
         void DetectHotspots() 
         {
-            Collider[] hits = Physics.OverlapSphere(transform.position, detectionRadius, hotspotLayer, queryTriggerInteraction:QueryTriggerInteraction.Collide);
+            Collider[] hits = Physics.OverlapSphere(transform.position, detectionRadius, hotspotLayer, queryTriggerInteraction: QueryTriggerInteraction.Collide);
 
             nearbyHotspots.Clear();
             foreach (Collider col in hits)
@@ -56,7 +56,7 @@ namespace FS_Core
                     nearbyHotspots.Add(hs);
             }
 
-            Hotspot newClosest = GetClosestHotspot();
+            var newClosest = GetClosestHotspot();
 
             // Toggle indicators
             if (previousClosest != newClosest)

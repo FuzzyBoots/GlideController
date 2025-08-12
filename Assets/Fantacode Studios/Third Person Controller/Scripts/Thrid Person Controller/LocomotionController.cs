@@ -25,6 +25,7 @@ namespace FS_ThirdPerson
         public static int rotation = Animator.StringToHash("rotation");
         public static int turnback_Mirror = Animator.StringToHash("turnback Mirror");
         public static int runToStopAmount = Animator.StringToHash("RunToStopAmount");
+        public static int coverMode = Animator.StringToHash("CoverMode");
     }
 
     public static partial class AnimationNames
@@ -40,6 +41,7 @@ namespace FS_ThirdPerson
         public static AnimatorLayerData armLayer = new AnimatorLayerData() { layerName = "Arm Layer", layer = 1, currentWeight = 0 };
         public static AnimatorLayerData baseLayer = new AnimatorLayerData() { layerName = "Base Layer", layer = 0, currentWeight = 0 };
     }
+    //[DefaultExecutionOrder(20)]
     public class LocomotionController : SystemBase, LocomotionICharacter
     {
         // Movement Parameters
@@ -172,7 +174,7 @@ namespace FS_ThirdPerson
         }
 
         public float GroundCheckRadius => groundCheckRadius;
-
+        public override float Priority => 100;
         public float MoveAmount => animator.GetFloat(AnimatorParameters.moveAmount);
         public override SystemState State => SystemState.Locomotion;
 
@@ -196,6 +198,7 @@ namespace FS_ThirdPerson
         float jumpMaxPosY;
         float headHeightThreshold = .75f;
         float sprintModeTimer = 0;
+        bool defaultMultiDirectionalStatus;
 
         float controllerDefaultHeight = .87f;
         float controllerDefaultYOffset = 1.7f;
@@ -220,28 +223,40 @@ namespace FS_ThirdPerson
         LocomotionInputManager inputManager;
         ItemEquipper itemEquipper;
 
-
-        void Awake()
+        private void Awake()
         {
-            _walkSpeed = walkSpeed;
-            _runSpeed = runSpeed;
-            _sprintSpeed = sprintSpeed;
-            maxSpeed = _sprintSpeed;
-
             playerController = GetComponent<PlayerController>();
-            cameraGameObject = playerController.cameraGameObject;
             animator = GetComponent<Animator>();
             animGraph = GetComponent<AnimGraph>();
             environmentScanner = GetComponent<EnvironmentScanner>();
             characterController = GetComponent<CharacterController>();
             inputManager = GetComponent<LocomotionInputManager>();
             itemEquipper = GetComponent<ItemEquipper>();
+        }
+
+        void Start()
+        {
+            _walkSpeed = walkSpeed;
+            _runSpeed = runSpeed;
+            _sprintSpeed = sprintSpeed;
+            maxSpeed = _sprintSpeed;
+
+            
+            cameraGameObject = playerController.cameraGameObject;
+            
             controllerDefaultHeight = characterController.height;
             controllerDefaultYOffset = characterController.center.y;
             if (!(groundLayer == (groundLayer | (1 << LayerMask.NameToLayer("Ledge")))))
                 groundLayer += 1 << LayerMask.NameToLayer("Ledge");
-        }
+            if (LayerExists("Hotspot") && !(groundLayer == (groundLayer | (1 << LayerMask.NameToLayer("Hotspot")))))
+                groundLayer += 1 << LayerMask.NameToLayer("Hotspot");
 
+            defaultMultiDirectionalStatus = useMultiDirectionalAnimation;
+        }
+        bool LayerExists(string layerName)
+        {
+            return LayerMask.NameToLayer(layerName) != -1;
+        }
         private void OnAnimatorIK(int layerIndex)
         {
             var hipPos = animator.GetBoneTransform(HumanBodyBones.Hips).transform;
@@ -295,7 +310,9 @@ namespace FS_ThirdPerson
             {
                 return;
             }
-
+            if (playerController.CameraType == FSCameraType.FirstPerson) useMultiDirectionalAnimation = true;
+            else useMultiDirectionalAnimation = defaultMultiDirectionalStatus;
+            //return;
             animator.SetFloat("locomotionType", useMultiDirectionalAnimation ? 1 : 0);
             if (inputManager.Crouch) crouchMode = !crouchMode;
 
@@ -436,7 +453,7 @@ namespace FS_ThirdPerson
                 if (jumpMaxPosY < transform.position.y)
                     jumpMaxPosY = transform.position.y;
 
-                if (moveDir != Vector3.zero && !playerController.PreventRotation)
+                if (moveDir != Vector3.zero && !playerController.PreventRotation && !playerController.AlignTargetWithCameraForward)
                 {
                     if (useMultiDirectionalAnimation)
                         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Time.deltaTime * 100 * rotationSpeed);
@@ -473,7 +490,7 @@ namespace FS_ThirdPerson
 
             currentVelocity.y = ySpeed;
             //if (currentSpeed != Vector3.zero)
-
+            //return;
             characterController.Move(currentVelocity * Time.deltaTime);
 
             currentVelocity.y = 0;
@@ -484,18 +501,20 @@ namespace FS_ThirdPerson
                 moveDir.y = 0;
             }
 
-            if (!playerController.PreventRotation)
+            if (!playerController.PreventRotation && !playerController.AlignTargetWithCameraForward)
             {
-                setTargetRotation(moveDir, ref targetRotation);
+                SetTargetRotation(moveDir, ref targetRotation);
 
                 float turnSpeed = Mathf.Lerp(rotationSpeed * 100f, 2 * rotationSpeed * 100f, moveSpeed / runSpeed);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Time.deltaTime * turnSpeed);
-                //transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed * 100f);
             }
             else
                 targetRotation = transform.rotation;
+
+            if(playerController.CurrentEquippedSystem == null)
+                playerController.AlignTargetWithCameraForward = (useMultiDirectionalAnimation && faceCameraForwardWhenIdle) || playerController.CameraType == FSCameraType.FirstPerson;
         }
-        void setTargetRotation(Vector3 moveDir, ref Quaternion targetRotation)
+        void SetTargetRotation(Vector3 moveDir, ref Quaternion targetRotation)
         {
             var cameraForward = cameraGameObject.transform.forward;
             cameraForward.y = 0;
@@ -543,9 +562,9 @@ namespace FS_ThirdPerson
             if ((rightFootHit || leftFootHit) && !Physics.Linecast(transform.position + up, transform.position - up, groundLayer)) // for predictive jump cases
                 hitCount -= 1;
 
-            //crouchVal = hitCount > 2 ? crouchMode ? 0.5f : 0f : 1f;
-            crouchVal = hitCount > 2 ? 0f : 1f;
-            animator.SetFloat(AnimatorParameters.idleType, crouchVal, 0.2f, Time.deltaTime);
+            crouchVal = hitCount > 2 ? crouchMode ? 0.5f : 0f : 1f;
+            //crouchVal = hitCount > 2 ? 0f : 1f;
+            animator.SetFloat(AnimatorParameters.idleType, crouchVal, 0.2f, Time.deltaTime); 
             if (animator.GetFloat(AnimatorParameters.idleType) > .2f)
             {
                 var hasSpace = leftFootHit && rightFootHit;
@@ -616,10 +635,10 @@ namespace FS_ThirdPerson
         {
             if (moveInput == Vector3.zero || desiredMoveDir == Vector3.zero) return false;
 
-            setTargetRotation(desiredMoveDir, ref velocityRotation);
+            SetTargetRotation(desiredMoveDir, ref velocityRotation);
             var angle = Vector3.SignedAngle(transform.forward, velocityRotation * Vector3.forward, Vector3.up);
 
-            if (Mathf.Abs(angle) > 130 && MoveAmount > QuickTurnThreshhold && animator.GetFloat(AnimatorParameters.idleType) < 0.2f && Physics.Raycast(transform.position + Vector3.up * 0.1f + transform.forward * 0.3f + transform.forward * MoveAmount / 1.5f, Vector3.down, 0.3f) && !Physics.Raycast(transform.position + Vector3.up * 0.1f, transform.forward, 0.6f))
+            if (playerController.CameraType != FSCameraType.FirstPerson && Mathf.Abs(angle) > 130 && MoveAmount > QuickTurnThreshhold && animator.GetFloat(AnimatorParameters.idleType) < 0.2f && Physics.Raycast(transform.position + Vector3.up * 0.1f + transform.forward * 0.3f + transform.forward * MoveAmount / 1.5f, Vector3.down, 0.3f) && !Physics.Raycast(transform.position + Vector3.up * 0.1f, transform.forward, 0.6f))
             {
                 turnBack = true;
                 animator.SetBool(AnimatorParameters.turnback_Mirror, angle <= 0);
@@ -657,6 +676,7 @@ namespace FS_ThirdPerson
             //OnStartSystem(this);
             //preventLocomotion = true;
 
+
             this.useRootmotionMovement = useRootmotionMovement;
             EnableRootMotion();
             animator.CrossFade(anim, crossFadeTime);
@@ -667,7 +687,7 @@ namespace FS_ThirdPerson
             float timer = 0f;
             while (timer <= animState.length)
             {
-                if (playerController.CurrentSystemState != State)
+                if (playerController.CurrentSystemState != State || (!animator.GetCurrentAnimatorStateInfo(0).IsName(anim) && !animState.IsName(anim)))
                 {
                     break;
                 }
@@ -757,7 +777,7 @@ namespace FS_ThirdPerson
 
         void VerticalJump()
         {
-            if (!verticalJump || !IsGrounded) return;
+            if (!verticalJump || !IsGrounded || playerController.PreventVerticalJump) return;
             var headHit = Physics.SphereCast(animator.GetBoneTransform(HumanBodyBones.Head).position, .15f, Vector3.up, out RaycastHit headHitData, headHeightThreshold, environmentScanner.ObstacleLayer);
             if (!headHit)
                 StartCoroutine(HandleVerticalJump());
@@ -929,7 +949,8 @@ namespace FS_ThirdPerson
         }
         void OnUnFocusSystem(SystemBase systemBase)
         {
-            systemBase.UnFocusScript();
+            systemBase?.UnFocusScript();
+            systemBase?.ExitSystem();
             playerController.ResetState();
         }
 
@@ -964,7 +985,11 @@ namespace FS_ThirdPerson
 
             // Some items should be unequipped during actions for others we just have to stop it's idle animation
             if (equippedItem != null && equippedItem.unEquipDuringActions)
+            {
+                itemEquipper.PreventItemSwitching = false;
                 itemEquipper.UnEquipItem(false);
+                itemEquipper.PreventItemSwitching = true;
+            }
             else if (equippedItem != null)
                 itemEquipper.StopIdleAnimation();
 
@@ -994,12 +1019,32 @@ namespace FS_ThirdPerson
             sprintSpeed = _sprintSpeed;
         }
         public bool CanTakeHit { get; set; } = true;
-        public void HandleTurningAnimation(bool enable)
+
+        private bool savedQuickStopAnimation;
+        private bool savedQuickTurnAnimation;
+        private bool savedTurningAnim;
+        public void HandleTurningAnimation(bool reset)
         {
-            playQuickStopAnimation = playQuickTurnAnimation = enableTurningAnim = enable;
-            if (!enable)
-                animator.SetFloat(AnimatorParameters.rotation, 0);
+            if (!reset)
+            {
+                // Save current states
+                savedQuickStopAnimation = playQuickStopAnimation;
+                savedQuickTurnAnimation = playQuickTurnAnimation;
+                savedTurningAnim = enableTurningAnim;
+
+                // Disable all
+                playQuickStopAnimation = playQuickTurnAnimation = enableTurningAnim = false;
+                animator.SetFloat(AnimatorParameters.rotation, 0f);
+            }
+            else
+            {
+                // Restore previous states
+                playQuickStopAnimation = savedQuickStopAnimation;
+                playQuickTurnAnimation = savedQuickTurnAnimation;
+                enableTurningAnim = savedTurningAnim;
+            }
         }
+
         public (Vector3, Vector3) LedgeMovement(Vector3 currMoveDir, Vector3 currVelocity)
         {
             if (currMoveDir == Vector3.zero) return (currMoveDir, currVelocity);
@@ -1081,9 +1126,16 @@ namespace FS_ThirdPerson
         }
         public void SetMaxSpeed(float maxSpeed, bool reset = false)
         {
-            if (reset) this.maxSpeed = sprintSpeed;
+            if (reset)
+            {
+                this.maxSpeed = sprintSpeed;
+                setDefaultStateToRunning = true;
+            }
             else
+            {
                 this.maxSpeed = maxSpeed;
+                setDefaultStateToRunning = false;
+            }
         }
         public void ReachDestination(Vector3 dest, float speed = 3f)
         {
@@ -1095,10 +1147,10 @@ namespace FS_ThirdPerson
             characterVelocity.y = 0;
 
             float forwardSpeed = Vector3.Dot(characterVelocity, transform.forward);
-            animator.SetFloat(AnimatorParameters.moveAmount, forwardSpeed / runSpeed, 0.2f, Time.deltaTime);
+            animator.SetFloat(AnimatorParameters.moveAmount, forwardSpeed / runSpeed, 0.1f, Time.deltaTime);
 
             float strafeSpeed = Vector3.Dot(characterVelocity, transform.right);
-            animator.SetFloat(AnimatorParameters.strafeAmount, strafeSpeed / runSpeed, 0.2f, Time.deltaTime);
+            animator.SetFloat(AnimatorParameters.strafeAmount, strafeSpeed / runSpeed, 0.1f, Time.deltaTime);
         }
 
         public bool IsOnLedge { get; set; }
@@ -1110,7 +1162,7 @@ namespace FS_ThirdPerson
 
         public bool CheckIsGrounded()
         {
-            return Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius, groundLayer);
+            return Physics.CheckSphere(transform.TransformPoint(groundCheckOffset), groundCheckRadius, groundLayer) || characterController.isGrounded;
         }
 
         #endregion

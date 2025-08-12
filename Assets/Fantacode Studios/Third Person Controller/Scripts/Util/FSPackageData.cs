@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FS_ThirdPerson
+namespace FS_Core
 {
     public class FSPackageData
     {
@@ -82,6 +82,15 @@ namespace FS_ThirdPerson
                 youtubeLink = "https://youtube.com/playlist?list=PLnbdyws4rcAsP4g_2BOR5NGtPwJ6S7UZI&si=lOTvTZL6DB6qnPux",
                 documentationLink = "https://fantacode.gitbook.io/fantacode-studios/fantacode-studios/fs-inventory-system",
                 assetLink = "https://assetstore.unity.com/packages/slug/302272"
+            }
+            ,
+               new FSPackageInfo()
+            {
+                packageName = "Shooter System",
+                iconPath = "Icons/Shooter_icon",
+                youtubeLink = "https://www.youtube.com/playlist?list=PLnbdyws4rcAtm31IUrtxHMyMwfSCS1Heb",
+                documentationLink = "https://fantacode.gitbook.io/fantacode-studios/fantacode-studios/fs-shooter-system",
+                assetLink = "https://assetstore.unity.com/packages/slug/327693"
             }
         };
 

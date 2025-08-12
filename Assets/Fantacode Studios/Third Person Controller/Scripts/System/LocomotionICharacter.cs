@@ -15,7 +15,7 @@ namespace FS_ThirdPerson
 
         public (Vector3,Vector3) LedgeMovement(Vector3 currMoveDir, Vector3 currVelocity);
 
-        public void HandleTurningAnimation(bool enable);
+        public void HandleTurningAnimation(bool reset);
 
         public bool CheckIsGrounded();
 

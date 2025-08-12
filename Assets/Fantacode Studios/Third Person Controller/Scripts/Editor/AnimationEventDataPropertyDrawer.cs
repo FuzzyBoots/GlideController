@@ -165,11 +165,17 @@ namespace FS_ThirdPerson
 
             if (parametersProp.arraySize > 0 && foldOut.boolValue)
             {
-                DrawParameters(contentRect, currentY, parametersProp);
+                DrawParameters(contentRect,ref currentY, parametersProp);
             }
+            currentY += LINE_HEIGHT;
+
+            var unityEventProp = property.FindPropertyRelative("unityEvent");
+             headerBgRect = new Rect(contentRect.x + LINE_HEIGHT, currentY, contentRect.width - LINE_HEIGHT, HEADER_HEIGHT);
+            EditorGUI.PropertyField(headerBgRect, unityEventProp);
+            currentY += VERTICAL_SPACING;
         }
 
-        private void DrawParameters(Rect contentRect, float currentY, SerializedProperty parametersProp)
+        private void DrawParameters(Rect contentRect,ref float currentY, SerializedProperty parametersProp)
         {
             var listRect = new Rect(contentRect.x + LINE_HEIGHT, currentY, contentRect.width - LINE_HEIGHT,
                 GetParametersHeight(parametersProp));
@@ -182,6 +188,7 @@ namespace FS_ThirdPerson
             {
                 DrawParameter(contentRect, ref currentY, parametersProp.GetArrayElementAtIndex(i));
             }
+
         }
 
         private void DrawParameter(Rect contentRect, ref float currentY, SerializedProperty parameter)
@@ -450,13 +457,16 @@ namespace FS_ThirdPerson
             var parametersProp = property.FindPropertyRelative("parameters");
             var targetObjectProp = property.FindPropertyRelative("targetObject");
             var foldOut = property.FindPropertyRelative("foldOut");
+            var unityEvent = property.FindPropertyRelative("unityEvent");
 
             if (foldOut.boolValue && parametersProp.arraySize > 0)
                 height += GetParametersHeight(parametersProp);
             if (targetObjectProp.objectReferenceValue != null)
                 height += (LINE_HEIGHT + VERTICAL_SPACING); // Method
 
+            height += EditorGUI.GetPropertyHeight(unityEvent, true) + LINE_HEIGHT;
             return height;
+
         }
     }
 }

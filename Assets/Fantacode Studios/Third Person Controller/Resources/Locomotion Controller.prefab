@@ -85,6 +85,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9051187573332892967}
+  - component: {fileID: 3339574482674729153}
   m_Layer: 0
   m_Name: Locomotion Controller
   m_TagString: Untagged
@@ -112,6 +113,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3339574482674729153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469986232706497970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3fd63cd1208ba840aba69e1a5268b3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  equipHotspot: {fileID: 4345605685271587992, guid: 19341ab4d9ce8814aa11b01ca7c8d515, type: 3}
 --- !u!1 &645185172639416972
 GameObject:
   m_ObjectHideFlags: 0
@@ -469,7 +483,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 60
   orthographic: 0
@@ -510,31 +524,65 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   followTarget: {fileID: 290252078734249747}
-  defaultSettings:
-    followTarget: {fileID: 0}
-    distance: 2.5
-    framingOffset: {x: 0, y: 1.5, z: 0}
-    followSmoothTime: 0.1
-    localRotationOffset: {x: 0, y: 0}
-    sensitivity: 0.6
-    minVerticalAngle: -45
-    maxVerticalAngle: 70
-    invertX: 0
-    invertY: 1
-    enableCameraCollisions: 1
-    minDistanceFromTarget: 0.2
-    serialized: 1
-  advancedCameraRotation: 0
+  CameraType: 1
+  firstPersonCamera:
+    defaultSettings:
+      distance: 0
+      framingOffset: {x: 0, y: 0, z: 0}
+      followSmoothTime: 0
+      localRotationOffset: {x: 0, y: 0}
+      sensitivity: 0.6
+      minVerticalAngle: -45
+      maxVerticalAngle: 45
+      invertX: 0
+      invertY: 1
+      enableCameraCollisions: 1
+      minDistanceFromTarget: 0
+      overridedFollowTarget: {fileID: 0}
+      serialized: 1
+    overrideCameraSettings: []
+    distanceSmoothTime: 0
+    framingSmoothTime: 0
+  thirdPersonCamera:
+    defaultSettings:
+      distance: 2.5
+      framingOffset: {x: 0, y: 1.5, z: 0}
+      followSmoothTime: 0
+      localRotationOffset: {x: 0, y: 0}
+      sensitivity: 0.6
+      minVerticalAngle: -45
+      maxVerticalAngle: 70
+      invertX: 0
+      invertY: 1
+      enableCameraCollisions: 1
+      minDistanceFromTarget: 0
+      overridedFollowTarget: {fileID: 0}
+      serialized: 1
+    overrideCameraSettings:
+    - state: 8
+      settings:
+        distance: 2.5
+        framingOffset: {x: 0.4, y: 1.5, z: 0}
+        followSmoothTime: 0
+        localRotationOffset: {x: 0, y: 0}
+        sensitivity: 0.6
+        minVerticalAngle: -45
+        maxVerticalAngle: 70
+        invertX: 0
+        invertY: 1
+        enableCameraCollisions: 1
+        minDistanceFromTarget: 0
+        overridedFollowTarget: {fileID: 0}
+        serialized: 1
+    distanceSmoothTime: 0.1
+    framingSmoothTime: 0.1
+  lockCursor: 1
   collisionLayers:
     serializedVersion: 2
     m_Bits: 1
-  lockCursor: 1
-  distanceSmoothTime: 0.1
-  distanceSmoothTimeWhenOcluded: 0
-  framingSmoothTime: 0.1
   collisionPadding: 0.05
-  overrideCameraSettings: []
-  nearClipPlane: 0.1
+  nearClipPlane: 0.01
+  distanceSmoothTimeWhenOcluded: 0
 --- !u!1 &3730686978613618689
 GameObject:
   m_ObjectHideFlags: 0
@@ -813,6 +861,7 @@ GameObject:
   - component: {fileID: 8854247822104563808}
   - component: {fileID: 6626806317791873919}
   - component: {fileID: 8961181310551414655}
+  - component: {fileID: 1082787242347922377}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -850,6 +899,7 @@ MonoBehaviour:
   managedScripts:
   - {fileID: 7052341856894694392}
   <CurrentSystemState>k__BackingField: 0
+  _editorSearchString: 
 --- !u!114 &7052341856894694392
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -891,15 +941,13 @@ MonoBehaviour:
   enableTurningAnim: 1
   playQuickTurnAnimation: 1
   QuickTurnThreshhold: -0.01
-  playQuickStopAnimation: 1
+  playQuickStopAnimation: 0
   runToStopThreshhold: 0.4
   groundCheckRadius: 0.2
   groundCheckOffset: {x: 0, y: 0.15, z: 0.07}
   groundLayer:
     serializedVersion: 2
     m_Bits: 1
-  isGrounded: 0
-  ySpeed: 0
 --- !u!114 &4440198059130040299
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -997,6 +1045,9 @@ MonoBehaviour:
   quickSwitchItemKey: 301
   selectKey: 101
   backKey: 27
+  crouchKey: 99
+  cycleToPreviousKey: 51
+  cycleToNextKey: 52
   jumpButton: 
   dropButton: 
   moveTypeButton: 
@@ -1005,6 +1056,9 @@ MonoBehaviour:
   quickSwitchItemButton: 
   selectButton: 
   backButton: 
+  crouchButton: 
+  cycleToPreviousItemButton: 
+  cycleToNextItemButton: 
 --- !u!114 &8516478148929039539
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1108,6 +1162,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <MaxHealth>k__BackingField: 100
+  canBeDamagedBy: 0
+--- !u!114 &1082787242347922377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5461086701115480959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a978c4e7a88e5df47ab760066ad4fd5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boneMappings: []
 --- !u!1 &5464243126050064263
 GameObject:
   m_ObjectHideFlags: 0

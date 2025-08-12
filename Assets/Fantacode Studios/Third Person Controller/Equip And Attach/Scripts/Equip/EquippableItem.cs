@@ -37,7 +37,7 @@ namespace FS_ThirdPerson
         public AnimationClip itemEquippedIdleClip;
 
 #if UNITY_EDITOR
-        [RestrictEnumValues(1, 2, 3, 5)]
+        [HideInInspectorEnum(0,7)]
 #endif
         [Tooltip("Specifies which body parts the equipped idle animation will affect.")]
         public Mask itemEquippedIdleClipMask = Mask.Arm;

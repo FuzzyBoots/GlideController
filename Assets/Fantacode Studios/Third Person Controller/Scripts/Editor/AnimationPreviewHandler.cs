@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -105,29 +106,77 @@ namespace FS_ThirdPerson
                 HandlePreviewScene();
             }
 
-            EditorGUI.BeginChangeCheck();
-            previewObject = (GameObject)EditorGUILayout.ObjectField(previewObject, typeof(GameObject), true, GUILayout.Width(150));
-            if (EditorGUI.EndChangeCheck())
-            {
-                if (previewObject != null && previewObject.GetComponent<Animator>() != null)
-                {
-                    var prefab = PrefabUtility.SaveAsPrefabAsset(previewObject, previewObjectPath);
-                    AssetDatabase.SaveAssets();
-                    AssetDatabase.Refresh();
-                    prefab.name = "Preview Object";
-                    previewObject = Resources.Load<GameObject>("Preview Object");
-                    var animator = previewObject.GetComponent<Animator>();
-                    if (animator != null)
-                        animator.applyRootMotion = false;
-                    if (scenePreviewOpened)
-                        OpenScenePreview();
-                }
-                UpdatePreview();
-            }
+            //EditorGUI.BeginChangeCheck();
+            //previewObject = (GameObject)EditorGUILayout.ObjectField(previewObject, typeof(GameObject), true, GUILayout.Width(150));
+            //if (EditorGUI.EndChangeCheck())
+            //{
+            //    if (previewObject != null && previewObject.GetComponent<Animator>() != null)
+            //    {
+            //        var prefab = PrefabUtility.SaveAsPrefabAsset(previewObject, previewObjectPath);
+            //        AssetDatabase.SaveAssets();
+            //        AssetDatabase.Refresh();
+            //        prefab.name = "Preview Object";
+            //        previewObject = Resources.Load<GameObject>("Preview Object");
+            //        var animator = previewObject.GetComponent<Animator>();
+            //        if (animator != null)
+            //            animator.applyRootMotion = false;
+            //        if (scenePreviewOpened)
+            //            OpenScenePreview();
+            //    }
+            //    UpdatePreview();
+            //}
 
             HandleAnimationEnumPopup();
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void HandlePreviewDragAndDrop(Rect previewRect)
+        {
+            Event currentEvent = Event.current;
+
+            switch (currentEvent.type)
+            {
+                case EventType.DragUpdated:
+                case EventType.DragPerform:
+                    if (!previewRect.Contains(currentEvent.mousePosition))
+                        return;
+
+                    // Check if the drag data contains a valid GameObject
+                    bool isValid = DragAndDrop.objectReferences
+                        .Any(obj => obj is GameObject go && go.GetComponent<Animator>() != null);
+
+                    DragAndDrop.visualMode = isValid ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
+
+                    if (currentEvent.type == EventType.DragPerform && isValid)
+                    {
+                        DragAndDrop.AcceptDrag();
+
+                        foreach (var obj in DragAndDrop.objectReferences)
+                        {
+                            if (obj is GameObject go)
+                            {
+                                previewObject = go;
+                                var prefab = PrefabUtility.SaveAsPrefabAsset(previewObject, previewObjectPath);
+                                AssetDatabase.SaveAssets();
+                                AssetDatabase.Refresh();
+                                prefab.name = "Preview Object";
+                                previewObject = Resources.Load<GameObject>("Preview Object");
+                                var animator = previewObject.GetComponent<Animator>();
+                                if (animator != null)
+                                    animator.applyRootMotion = false;
+                                if (scenePreviewOpened)
+                                    OpenScenePreview();
+                                UpdatePreview();
+                            }
+                            Repaint();
+                            break;
+                        }
+                    }
+
+                    currentEvent.Use();
+                    break;
+            }
         }
 
         (bool, string) CanPreview()
@@ -262,6 +311,7 @@ namespace FS_ThirdPerson
                 r = new Rect(r.x, r.y + 20, r.width, r.height);
                 base.OnInteractivePreviewGUI(r, background);
                 SampleAnimationPreview(r);
+                HandlePreviewDragAndDrop(r);
 
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();

@@ -35,7 +35,9 @@ namespace FS_Core
         private CursorState prevCursorState;
 
         private LocomotionInputManager inputManager;
-        private ItemEquipper equipHandler;
+        private PlayerController playerController;
+
+        private ItemEquipper itemEquipper;
         private LocomotionICharacter player;
 
         private struct CursorState
@@ -50,37 +52,57 @@ namespace FS_Core
             InitializeComponents();
             InitializeWheel();
 
-            equipHandler.OnEquip += (item) => {
+            itemEquipper.OnEquip += (item) => {
                 if (!quickSwitchItems.Contains(item))
                     AddQuickSwitchItem(item);
                 SetButtonHoverState(null); 
             };
-            equipHandler.OnUnEquip += () => { SetButtonHoverState(null, true); };
+            itemEquipper.OnUnEquip += () => { SetButtonHoverState(null, true); };
 
-            equipHandler.OnItemBecameUnused += RemoveQuickSwitchItem;
+            itemEquipper.OnItemBecameUnusable += RemoveQuickSwitchItem;
+
+            foreach (var item in quickSwitchItems)
+            {
+                if (!itemEquipper.equippableItems.Contains(item))
+                    itemEquipper.equippableItems.Add(item);
+            }
         }
 
         private void InitializeComponents()
         {
             inputManager = GetComponent<LocomotionInputManager>();
-            equipHandler = GetComponent<ItemEquipper>();
+            playerController = GetComponent<PlayerController>();
+            itemEquipper = GetComponent<ItemEquipper>();
             player = GetComponent<LocomotionICharacter>();
         }
 
         private void InitializeWheel()
         {
-            if (quickSwitchItems.Count > 0 && wheelParent != null)
+            originalScale = wheelParent.localScale;
+            wheelParent.localScale = Vector3.zero;
+            wheelParent.gameObject.SetActive(false);
+            if (quickSwitchItems.Count > 0)
             {
-                originalScale = wheelParent.localScale;
-                wheelParent.localScale = Vector3.zero;
-                wheelParent.gameObject.SetActive(false);
                 GenerateWeaponWheel();
             }
         }
 
         private void Update()
         {
-            if (!enableQuickSwitchItemUI) return;
+            if (!enableQuickSwitchItemUI || playerController.IsDead || itemEquipper.PreventItemSwitching) return;
+
+            // Weapon cycling with Q (previous) and E (next)
+            if (quickSwitchItems.Count > 1 && !uiShowing)
+            {
+                if (inputManager.CycleToPreviousItem)
+                {
+                    CycleQuickSwitch(-1);
+                }
+                else if (inputManager.CycleToNextItem)
+                {
+                    CycleQuickSwitch(1);
+                }
+            }
 
             if (inputManager.QuickSwitchItemDown)
             {
@@ -118,7 +140,16 @@ namespace FS_Core
             if (currentHoveringButton != null &&
                 quickSwitchUIElements.TryGetValue(currentHoveringButton, out var item))
             {
-                equipHandler.EquipItem(item);
+                if (itemEquipper.EquippedItem == item)
+                {
+                    if (!playerController.IsDead)
+                        itemEquipper.UnEquipItem();
+                }
+                else
+                {
+                    if (!playerController.IsDead)
+                        itemEquipper.EquipItem(item);
+                }
             }
         }
 
@@ -244,7 +275,6 @@ namespace FS_Core
             onComplete?.Invoke();
         }
 
-
         private void HighlightButtonWithJoystick(Vector2 joystickInput)
         {
             if (quickSwitchUIElements == null ||
@@ -313,7 +343,7 @@ namespace FS_Core
 
         public Image GetEquippedItemImage()
         {
-            var currentItem = equipHandler.EquippedItem;
+            var currentItem = itemEquipper.EquippedItem;
             if (currentItem == null) return null;
 
             foreach (var kvp in quickSwitchUIElements)
@@ -327,13 +357,13 @@ namespace FS_Core
         {
             if (quickSwitchUIElements == null || quickSwitchUIElements.Count == 0)
             {
-                Debug.LogWarning("Invalid parameters for UI alignment.");
+                //Debug.LogWarning("Invalid parameters for UI alignment.");
                 return;
             }
 
             float radius = CalculateWheelRadius();
             ArrangeButtons(radius);
-        }
+        } 
 
         private float CalculateWheelRadius()
         {
@@ -399,13 +429,21 @@ namespace FS_Core
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
-                equipHandler.EquipItem(quickSwitchItems[index]);
+                if (itemEquipper.EquippedItem == quickSwitchItems[index])
+                {
+                    if (!playerController.IsDead)
+                        itemEquipper.UnEquipItem();
+                }
+                else
+                {
+                    if(!playerController.IsDead)
+                        itemEquipper.EquipItem(quickSwitchItems[index]);
+                }
                 HideUI();
             });
 
             button.GetComponent<Image>().sprite = quickSwitchItems[index].Icon;
         }
-
 
         public void AddQuickSwitchItem(EquippableItem newItem)
         {
@@ -426,6 +464,24 @@ namespace FS_Core
 
             quickSwitchItems.Remove(itemToRemove);
             GenerateWeaponWheel();
+        }
+
+        private void CycleQuickSwitch(int direction)
+        {
+            if (quickSwitchItems.Count == 0) return;
+
+            // Find the currently equipped item index
+            int equippedIndex = quickSwitchItems.IndexOf(itemEquipper.EquippedItem);
+            if (equippedIndex == -1)
+                equippedIndex = 0;
+
+            int nextIndex = (equippedIndex + direction + quickSwitchItems.Count) % quickSwitchItems.Count;
+
+            // Only switch if not already equipped
+            if (quickSwitchItems[nextIndex] != itemEquipper.EquippedItem)
+            {
+                itemEquipper.EquipItem(quickSwitchItems[nextIndex]);
+            }
         }
     }
 }

@@ -125,7 +125,6 @@ namespace FS_Core
                 {
                     item.attributeValues.Remove(attrToRemove);
                 }
-
 #if UNITY_EDITOR
                 // Mark the item as dirty since we modified it
                 EditorUtility.SetDirty(item);

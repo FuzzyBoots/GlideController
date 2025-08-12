@@ -123,7 +123,7 @@ namespace FS_ThirdPerson
                 if (equippableItem.category != null)
                 {
                     GUILayout.Space(5);
-                    if (equippableItem.Attributes.Count > 0)
+                    if (equippableItem.Attributes.Count > 0 || equippableItem.category.Attributes.Count > 0)
                     {
                         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                         {

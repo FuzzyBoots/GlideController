@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace FS_ThirdPerson
 {
@@ -193,6 +194,8 @@ namespace FS_ThirdPerson
 
         public object[] parametersList => parameters.Select(p => p.GetValue()).ToArray();
 
+
+        public UnityEvent unityEvent;
 
 
         public void InvokeCustomAnimationEvent(GameObject g)

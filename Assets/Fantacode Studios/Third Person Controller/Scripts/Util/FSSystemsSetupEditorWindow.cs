@@ -1,13 +1,14 @@
 #if UNITY_EDITOR
-using FS_Core;
+using FS_ThirdPerson;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Animations;
+using UnityEditorInternal;
 using UnityEngine;
 
-namespace FS_ThirdPerson
+namespace FS_Core
 {
     public class FSSystemsSetupEditorWindow : EditorWindow
     {
@@ -42,19 +43,22 @@ namespace FS_ThirdPerson
 
 
 
-        static FSSystemsSetup setupScript;
+        public static FSSystemsSetup setupScript;
         public Vector2 scrolPosition = Vector2.zero;
 
         private float dividerPosition = 150f;
 
-        public static int selectedTab = 0;
+        static int selectedTab = 0;
         private string[] toolbarOptions = { "Welcome", "Setup", "Packages", "Dependencies" };
 
         static Rect tabRect;
         static Rect windowRect;
 
         static FSSystemsSetupEditorWindow window;
+
         private GUIStyle hintStyle;
+        public static CharacterType characterType = CharacterType.Player; // Set a default value
+
 
         [MenuItem("Tools/FS Systems")]
         public static void ShowWindow()
@@ -65,15 +69,17 @@ namespace FS_ThirdPerson
                 SetWindowHeight(652);
                 CreateSetupScript();
                 setupScript.FindSystem();
-                var systems = setupScript.FSSystems.Where(s => s.Value.characterType == CharacterType.Player).ToList();
-                foreach ( var s in systems )
-                {
-                    if(s.Value.name != "Locomotion System")
-                    {
-                        s.Value.enabled = false;
-                    }
-                }   
+                if (characterType == CharacterType.Player) setupScript.EnableSystems(FSSystemsSetup.ThirdPersonControllerSystemSetup.systemName);
+                InitializeCharacterTypeOptions();
             }
+        }
+
+        public static void ChangeCharacterType(CharacterType newType)
+        {
+            characterType = newType;
+            SetTab(1);
+            setupScript.FindSystem();
+            setupScript.EnableSystems();
         }
 
         private void OnEnable()
@@ -87,12 +93,16 @@ namespace FS_ThirdPerson
 
         private void OnDisable()
         {
+            characterType = CharacterType.Player;
+
             if (setupScript != null)
                 GameObject.DestroyImmediate(setupScript.gameObject);
         }
 
         private void OnDestroy()
         {
+            characterType = CharacterType.Player;
+
             if (setupScript != null)
                 GameObject.DestroyImmediate(setupScript.gameObject);
         }
@@ -260,7 +270,27 @@ namespace FS_ThirdPerson
         Editor characterPreview;
         public static GameObject characterModel;
         static GameObject currentPreviewObj;
-        string animatorName = "Combined Controller";
+
+
+        string playerAnimatorName = "Combined Controller";
+        string aiAnimatorName = "Combined Controller AI";
+        string animatorName => characterType == CharacterType.Player ? playerAnimatorName : aiAnimatorName;
+
+
+        static CharacterType[] visibleValues;
+        static string[] displayedNames;
+
+        static void InitializeCharacterTypeOptions()
+        {
+            if (visibleValues != null) return; // Already initialized
+
+            visibleValues = Enum.GetValues(typeof(CharacterType))
+                .Cast<CharacterType>()
+                .Where(v => v != CharacterType.None)
+                .ToArray();
+
+            displayedNames = visibleValues.Select(v => v.ToString()).ToArray();
+        }
 
         private void SetupWindow()
         {
@@ -288,24 +318,35 @@ namespace FS_ThirdPerson
             };
 
 
+            Rect characterTypeRect = new Rect(8, 35, 150, 20);
+            InitializeCharacterTypeOptions();
+            EditorGUI.BeginChangeCheck();
+            characterType = visibleValues[EditorGUI.Popup(characterTypeRect, "", (int)characterType, displayedNames)];
+            if (EditorGUI.EndChangeCheck())
+            {
+                setupScript.FindSystem();
+                if (characterType == CharacterType.Player) setupScript.EnableSystems(FSSystemsSetup.ThirdPersonControllerSystemSetup.systemName);
+                else if(characterType == CharacterType.AI) setupScript.EnableSystems();
+            }
+
             Rect buttonRect = new Rect(windowRect.width - 158, 35, 150, 20);
             //GUI.backgroundColor = new Color(0.2f, 0.4f, 0.8f, 0.8f);
-            if (setupScript.FSSystems.Count == 0 || GUI.Button(buttonRect, "Load Systems", findButtonStyle))
+            if (setupScript.CurrentFSSystemsForSetup.Count == 0 || GUI.Button(buttonRect, "Load Systems", findButtonStyle)) 
             {
                 setupScript.FindSystem();
             }
+
             GUI.backgroundColor = Color.white;
             GUILayout.Space(10);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
+            var systems = setupScript.CurrentFSSystemsForSetup.Where(s => s.Value.characterType == characterType).ToList();
+            scrolPosition = GUILayout.BeginScrollView(scrolPosition, GUILayout.Height(180));
 
-            var systems = setupScript.FSSystems.Where(s => s.Value.characterType == CharacterType.Player).ToList();
-            scrolPosition = GUILayout.BeginScrollView(scrolPosition, GUILayout.Height(Mathf.Min(systems.Count * 40, 180)));
-            //SetWindowHeight(472 + systems.Count * 40);
             foreach (var item in systems)
             {
-                DrawFancyToggle(item.Value.name, ref item.Value.enabled);
+                DrawFancyToggle(item.Value.displayName, ref item.Value.selected);
             }
 
             GUILayout.EndScrollView();
@@ -314,7 +355,10 @@ namespace FS_ThirdPerson
             GUILayout.EndVertical();
             GUILayout.Space(5);
             GUIContent textFieldLabel = new GUIContent("Animator Name", "The name for the new Animator Controller being created.");
-            animatorName = EditorGUILayout.TextField(textFieldLabel, animatorName);
+            if(characterType == CharacterType.Player)
+                playerAnimatorName = EditorGUILayout.TextField(textFieldLabel, playerAnimatorName);
+            else if(characterType ==CharacterType.AI)
+                aiAnimatorName = EditorGUILayout.TextField(textFieldLabel, aiAnimatorName);
             GUILayout.Space(5);
             DrawPreviewArea();
 
@@ -335,6 +379,9 @@ namespace FS_ThirdPerson
             GUI.backgroundColor = new Color(0.6f, 0.2f, 0.2f, 0.8f); // Soft Red
             if (GUILayout.Button("Reset", buttonStyle, GUILayout.Width(position.width * 0.3f)))
             {
+                if (setupScript == null) return;
+
+                setupScript.EnableSystems(FSSystemsSetup.ThirdPersonControllerSystemSetup.systemName);
                 HandleReset();
             }
 
@@ -367,7 +414,6 @@ namespace FS_ThirdPerson
             // Draw background
             EditorGUI.DrawRect(previewRect, new Color(0.1f, 0.1f, 0.1f, 1f));
 
-
             // Draw preview or message
             if (characterModel != null)
             {
@@ -388,6 +434,7 @@ namespace FS_ThirdPerson
                 // Draw empty state message
                 DrawEmptyPreviewMessage(previewRect);
             }
+
             if (hintStyle == null)
             {
                 hintStyle = new GUIStyle(GUI.skin.label);
@@ -550,38 +597,59 @@ namespace FS_ThirdPerson
             AssetDatabase.CopyAsset(sourcePath, destinationPath);
             AssetDatabase.Refresh();
 
-            AnimatorController CombinedController = AssetDatabase.LoadAssetAtPath<AnimatorController>(destinationPath);
+            UnityEditor.Animations.AnimatorController CombinedController = AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(destinationPath);
             AnimatorMergerUtility animatorMergerUtility = new AnimatorMergerUtility(CombinedController, CombinedController);
 
-
-            (var player, var model, var systemControllerParentObj) = SetCharacterModelAsChild();
-            foreach (var item in setupScript.FSSystems)
+            GameObject characterObject = null;
+            if (characterType == CharacterType.Player)
             {
-                if (item.Value.enabled)
+                (var player, var model, var newFSSystemObject) = SetupPlayer();
+                characterObject = player;
+                characterObject.GetComponent<Animator>().avatar = characterModel.GetComponent<Animator>().avatar;
+                characterObject.GetComponent<Animator>().runtimeAnimatorController = CombinedController;
+                foreach (var item in setupScript.CurrentFSSystemsForSetup)
                 {
-                    var systemPrefabObj = setupScript.CopyComponentsAndAnimControllerFromPrefab(item.Value.prefabName, animatorMergerUtility, player);
-                    //if (systemPrefabObj != null)
-                    item.Value.setupExtraActions?.Invoke(model, systemPrefabObj, systemControllerParentObj);
-
-                    if (!string.IsNullOrEmpty(item.Value.mobileControllerPrefabName))
+                    if (item.Value.selected)
                     {
-                        var mobileControllerParent = systemControllerParentObj.transform.Find("Mobile Controller");
-                        GameObject mcPrefab = Resources.Load<GameObject>(item.Value.mobileControllerPrefabName);
-                        var mc = Instantiate(mcPrefab, mobileControllerParent);
-                        mc.name = mcPrefab.name;
-                        //mc.transform.SetParent(mobileControllerParent);
+                        // Parent object of the controller
+                        var FSSystemObjectPrefab = setupScript.CopyComponentsAndAnimControllerFromPrefab(item.Value.prefabName, animatorMergerUtility, player);
+
+                        item.Value.extraSetupActionPlayer?.Invoke(player, FSSystemObjectPrefab, newFSSystemObject);
+
+                        if (item.Value.characterType == CharacterType.Player && !string.IsNullOrEmpty(item.Value.mobileControllerPrefabName))
+                        {
+                            var mobileControllerParent = newFSSystemObject.transform.Find("Mobile Controller");
+                            GameObject mcPrefab = Resources.Load<GameObject>(item.Value.mobileControllerPrefabName);
+                            var mc = Instantiate(mcPrefab, mobileControllerParent);
+                            mc.name = mcPrefab.name;
+                        }
+                    }
+                }
+                var playerController = player.GetComponent<PlayerController>();
+                playerController.managedScripts = player.GetComponents<SystemBase>().ToList().OrderByDescending(x => x.Priority).ToList();
+            }
+            else if (characterType == CharacterType.AI)
+            {
+                characterObject = SetupAI();
+                characterObject.GetComponent<Animator>().avatar = characterModel.GetComponent<Animator>().avatar;
+                characterObject.GetComponent<Animator>().runtimeAnimatorController = CombinedController;
+                foreach (var item in setupScript.CurrentFSSystemsForSetup)
+                {
+                    if (item.Value.selected)
+                    {
+                        var prefabObject = setupScript.CopyComponentsAndAnimControllerFromPrefab(item.Value.prefabName, animatorMergerUtility, characterObject);
+                        item.Value.extraSetupActionAI?.Invoke(characterObject, prefabObject);
                     }
                 }
             }
+
             Debug.Log($"A new Animator Controller named {animatorName} has been created and stored in the {destinationPath} directory.");
+            
 
-
-            if (characterModel)
-            {
-                player.GetComponent<Animator>().avatar = characterModel.GetComponent<Animator>().avatar;
-            }
-            player.GetComponent<Animator>().runtimeAnimatorController = CombinedController;
-
+            Selection.activeObject = characterObject;
+            SceneView sceneView = SceneView.lastActiveSceneView;
+            sceneView.Focus();
+            sceneView.LookAt(characterObject.transform.position);
         }
 
         private void HandleReset()
@@ -609,19 +677,41 @@ namespace FS_ThirdPerson
             }
         }
 
+        public static void CopyComponents(GameObject sourcePrefab, GameObject targetPrefab)
+        {
+            Component[] components = sourcePrefab.GetComponents<Component>();
+
+            foreach (Component sourceComp in components)
+            {
+                Type componentType = sourceComp.GetType();
+                if (targetPrefab.GetComponent(componentType) != null) continue;
+
+                System.Type type = sourceComp.GetType();
+                Component targetComp = targetPrefab.GetComponent(type);
+
+                if (targetComp == null)
+                {
+                    targetComp = targetPrefab.AddComponent(type);
+                    ComponentUtility.CopyComponent(sourceComp);
+                    ComponentUtility.PasteComponentValues(targetComp);
+                }
+
+            }
+        }
+
         static void CreateSetupScript()
         {
             if (setupScript == null)
             {
                 GameObject go = new GameObject("FS System");
                 setupScript = go.AddComponent<FSSystemsSetup>();
-                setupScript.FSSystems = new Dictionary<string, FSSystemInfo>();
+                setupScript.CurrentFSSystemsForSetup = new Dictionary<string, FSSystemInfo>();
 
                 setupScript.gameObject.hideFlags = HideFlags.HideInHierarchy;
             }
         }
 
-        private (GameObject, GameObject, GameObject) SetCharacterModelAsChild()
+        private (GameObject, GameObject, GameObject) SetupPlayer()
         {
             GameObject prefab = Resources.Load<GameObject>("Locomotion Controller");
             GameObject instance = Instantiate(prefab);
@@ -631,10 +721,22 @@ namespace FS_ThirdPerson
             var camera = instance.GetComponentInChildren<CameraController>();
 
             camera.followTarget = player.transform;
+            camera.firstPersonCamera.defaultSettings.overridedFollowTarget = player.transform;
+            camera.thirdPersonCamera.defaultSettings.overridedFollowTarget = player.transform;
             GameObject model = Instantiate(characterModel, Vector3.zero, Quaternion.identity);
             model.transform.SetParent(player.transform);
 
             var animator = model.GetComponent<Animator>();
+
+            string headTargetName = "Head Follow Target";
+            var headTransform = animator.GetBoneTransform(HumanBodyBones.Head);
+            var headTarget = new GameObject(headTargetName);
+            headTarget.transform.SetParent(headTransform);
+            headTarget.transform.SetLocalPositionAndRotation(new Vector3(0, 0, .1f), Quaternion.identity);
+
+            camera.firstPersonCamera.defaultSettings.overridedFollowTarget = headTarget.transform;
+            camera.thirdPersonCamera.defaultSettings.overridedFollowTarget = player.transform;
+
             AddFootTrigger(animator);
             SetItemHandler(animator);
 
@@ -646,9 +748,30 @@ namespace FS_ThirdPerson
             return (player, model, instance);
         }
 
+        private GameObject SetupAI()
+        {
+            GameObject prefab = Resources.Load<GameObject>("AI Controller");
+            GameObject aiObject = Instantiate(prefab, Vector3.zero, Quaternion.identity);
+            aiObject.name = "FS AI";
+
+            GameObject model = Instantiate(characterModel, Vector3.zero, Quaternion.identity);
+            model.transform.SetParent(aiObject.transform);
+
+            var animator = model.GetComponent<Animator>();
+
+            AddFootTrigger(animator);
+            SetItemHandler(animator);
+
+            if (aiObject.layer != LayerMask.NameToLayer("Enemy"))
+                aiObject.layer = LayerMask.NameToLayer("Enemy");
+
+            return aiObject;
+        }
 
         private void AddFootTrigger(Animator animator)
         {
+            if (!animator.isHuman) return;
+
             var footTriggerPrefab = (GameObject)Resources.Load("FootTrigger");
             var rightFoot = animator.GetBoneTransform(HumanBodyBones.RightFoot).transform;
             var leftFoot = animator.GetBoneTransform(HumanBodyBones.LeftFoot).transform;
@@ -663,18 +786,33 @@ namespace FS_ThirdPerson
 
         }
 
-        private void SetItemHandler(Animator animator)
+        public static void SetItemHandler(Animator animator)
         {
-            var rh = new GameObject("Right Hand Item Handler");
-            rh.transform.parent = animator.GetBoneTransform(HumanBodyBones.RightHand);
-            rh.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            // Check for right hand item handler
+            Transform rightHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+            Transform rightHandHandler = rightHand.Find("Right Hand Item Handler");
 
-            rh.AddComponent<EquippableItemHolder>();
-            var lh = new GameObject("Left Hand Item Handler");
-            lh.transform.parent = animator.GetBoneTransform(HumanBodyBones.LeftHand);
-            lh.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            lh.AddComponent<EquippableItemHolder>();
+            if (rightHandHandler == null)
+            {
+                var rh = new GameObject("Right Hand Item Handler");
+                rh.transform.parent = rightHand;
+                rh.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                rh.AddComponent<EquippableItemHolder>();
+            }
+
+            // Check for left hand item handler
+            Transform leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
+            Transform leftHandHandler = leftHand.Find("Left Hand Item Handler");
+
+            if (leftHandHandler == null)
+            {
+                var lh = new GameObject("Left Hand Item Handler");
+                lh.transform.parent = leftHand;
+                lh.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                lh.AddComponent<EquippableItemHolder>();
+            }
         }
+
 
         #region warning
 
@@ -706,7 +844,7 @@ namespace FS_ThirdPerson
 
         private void PackageWindow()
         {
-            if (setupScript.FSSystems.Count == 0)
+            if (setupScript.CurrentFSSystemsForSetup.Count == 0)
             {
                 setupScript.FindSystem();
             }
@@ -754,9 +892,9 @@ namespace FS_ThirdPerson
 
 
             bool systemIsInstalled = false;
-            foreach (var system in setupScript.FSSystems.Values)
+            foreach (var system in setupScript.AllInstalledSystems.Values)
             {
-                if (system.name == info.packageName)
+                if (system.systemName == info.packageName)
                 {
                     systemIsInstalled = true;
                     break;
