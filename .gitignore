@@ -77,3 +77,8 @@ crashlytics-build.properties
 
 /[Aa]ssets/Fantacode Studios/Grappling Hook System
 /[Aa]ssets/Fantacode Studios/Grappling Hook System.meta
+
+/[Aa]ssets/Plugins/*
+
+Assets/Plugins.meta
+ProjectSettings/MaintainerSettings.asset
