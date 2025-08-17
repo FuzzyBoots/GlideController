@@ -1,0 +1,302 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fb92523b28d77f41a784457dbae16a6, type: 3}
+  m_Name: Hang Glider
+  m_EditorClassIdentifier: 
+  id: 47d09322-6cbe-459b-804f-349eecd97ed8
+  name: Hang Glider
+  description: This ia a hang glider
+  icon: {fileID: 21300000, guid: cfdbf73ff20c12c48b88125dda3b13d5, type: 3}
+  category: {fileID: 11400000, guid: 8d754741daa6ec74d9716adcc6fec25c, type: 2}
+  overrideCategorySettings: 0
+  overrideCategoryAttributes: 0
+  equipmentSlotIndex: 2
+  attachModel: 1
+  modelPrefab: {fileID: 2566135425308386109, guid: 420f62a9e0c1a074bba8382c1ca5b785, type: 3}
+  isSkinnedMesh: 1
+  localPosition: {x: 0, y: 0, z: 0}
+  localRotation: {x: 0, y: 0, z: 0}
+  sellable: 0
+  droppable: 0
+  weight: 0
+  canCraft: 0
+  priceToCraft:
+    amount: 0
+    currencyIndex: 0
+  canDismantle: 0
+  priceToDismantle:
+    amount: 0
+    currencyIndex: 0
+  ingredients: []
+  overrideDismantleItems: 0
+  dismantleToItems: []
+  price:
+    amount: 0
+    currencyIndex: 0
+  requiresMultipleCurrencies: 0
+  currenciesRequired: []
+  overrideAction: 0
+  itemAction: {fileID: 0}
+  attributeValues: []
+  overrideAttributes: []
+  pickupPrefab: {fileID: 0}
+  spawnModel: 1
+  holderBone: 18
+  localPositionR: {x: 0, y: 0, z: 0}
+  localRotationR: {x: 0, y: 0, z: 0}
+  localPositionL: {x: 0, y: 0, z: 0}
+  localRotationL: {x: 0, y: 0, z: 0}
+  unEquipDuringActions: 1
+  isDualItem: 0
+  overrideController: {fileID: 0}
+  itemEquippedIdleClip: {fileID: 0}
+  itemEquippedIdleClipMask: 1
+  itemEnableTime: 0
+  equipAudio: {fileID: 0}
+  itemDisableTime: 0
+  unEquipAudio: {fileID: 0}
+  equipClip:
+    clip: {fileID: 0}
+    customAnimationSpeed: 0
+    useAsGlobalTimeScale: 0
+    speedModifier:
+      currentModifierType: 0
+      constant: 1
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      defaultCurveRect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1
+        height: 3
+      serialized: 1
+    useGravity: 1
+    gravityModifier:
+      currentModifierType: 0
+      constant: 1
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      defaultCurveRect:
+        serializedVersion: 2
+        x: 0
+        y: -2
+        width: 1
+        height: 4
+      serialized: 1
+    showDetails: 0
+    TranistionInAndOut: {x: 0.2, y: 0.2}
+    events: []
+    onEndAnimation: []
+    serialized: 1
+  unEquipClip:
+    clip: {fileID: 0}
+    customAnimationSpeed: 0
+    useAsGlobalTimeScale: 0
+    speedModifier:
+      currentModifierType: 0
+      constant: 1
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      defaultCurveRect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1
+        height: 3
+      serialized: 1
+    useGravity: 1
+    gravityModifier:
+      currentModifierType: 0
+      constant: 1
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      defaultCurveRect:
+        serializedVersion: 2
+        x: 0
+        y: -2
+        width: 1
+        height: 4
+      serialized: 1
+    showDetails: 0
+    TranistionInAndOut: {x: 0.2, y: 0.2}
+    events: []
+    onEndAnimation: []
+    serialized: 1
+  glidingClip:
+    clip: {fileID: 0}
+    customAnimationSpeed: 0
+    useAsGlobalTimeScale: 0
+    speedModifier:
+      currentModifierType: 0
+      constant: 1
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      defaultCurveRect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1
+        height: 3
+      serialized: 1
+    useGravity: 1
+    gravityModifier:
+      currentModifierType: 0
+      constant: 1
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      defaultCurveRect:
+        serializedVersion: 2
+        x: 0
+        y: -2
+        width: 1
+        height: 4
+      serialized: 1
+    showDetails: 0
+    TranistionInAndOut: {x: 0.2, y: 0.2}
+    events: []
+    onEndAnimation: []
+    serialized: 1
+  glider: {fileID: 0}
+  flightProfile: {fileID: 11400000, guid: 1019283d36971c042a80cc00ab3209a6, type: 2}

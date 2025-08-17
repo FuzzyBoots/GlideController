@@ -457,31 +457,50 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   followTarget: {fileID: 290252078734249747}
-  defaultSettings:
-    followTarget: {fileID: 0}
-    distance: 2.5
-    framingOffset: {x: 0, y: 1.5, z: 0}
-    followSmoothTime: 0.1
-    localRotationOffset: {x: 0, y: 0}
-    sensitivity: 0.6
-    minVerticalAngle: -45
-    maxVerticalAngle: 70
-    invertX: 0
-    invertY: 1
-    enableCameraCollisions: 1
-    minDistanceFromTarget: 0.2
-    serialized: 1
-  advancedCameraRotation: 0
+  CameraType: 1
+  firstPersonCamera:
+    defaultSettings:
+      distance: 2.5
+      framingOffset: {x: 0, y: 1.5, z: 0}
+      followSmoothTime: 0
+      localRotationOffset: {x: 0, y: 0}
+      sensitivity: 0.6
+      minVerticalAngle: -45
+      maxVerticalAngle: 70
+      invertX: 0
+      invertY: 1
+      enableCameraCollisions: 1
+      minDistanceFromTarget: 0
+      overridedFollowTarget: {fileID: 0}
+      serialized: 1
+    overrideCameraSettings: []
+    distanceSmoothTime: 0
+    framingSmoothTime: 0
+  thirdPersonCamera:
+    defaultSettings:
+      distance: 2.5
+      framingOffset: {x: 0, y: 1.5, z: 0}
+      followSmoothTime: 0
+      localRotationOffset: {x: 0, y: 0}
+      sensitivity: 0.6
+      minVerticalAngle: -45
+      maxVerticalAngle: 70
+      invertX: 0
+      invertY: 1
+      enableCameraCollisions: 1
+      minDistanceFromTarget: 0
+      overridedFollowTarget: {fileID: 0}
+      serialized: 1
+    overrideCameraSettings: []
+    distanceSmoothTime: 0
+    framingSmoothTime: 0
+  lockCursor: 1
   collisionLayers:
     serializedVersion: 2
     m_Bits: 1
-  lockCursor: 1
-  distanceSmoothTime: 0.1
-  distanceSmoothTimeWhenOcluded: 0
-  framingSmoothTime: 0.1
   collisionPadding: 0.05
-  overrideCameraSettings: []
   nearClipPlane: 0.1
+  distanceSmoothTimeWhenOcluded: 0
 --- !u!1 &3730686978613618689
 GameObject:
   m_ObjectHideFlags: 0
@@ -756,8 +775,8 @@ GameObject:
   - component: {fileID: 8854247822104563808}
   - component: {fileID: 6626806317791873919}
   - component: {fileID: 8961181310551414655}
-  - component: {fileID: 5282165639278203864}
-  - component: {fileID: 7785224735817522124}
+  - component: {fileID: 1082787242347922377}
+  - component: {fileID: 2389188036522252333}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -795,6 +814,7 @@ MonoBehaviour:
   managedScripts:
   - {fileID: 7052341856894694392}
   <CurrentSystemState>k__BackingField: 0
+  _editorSearchString: 
 --- !u!114 &7052341856894694392
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -911,6 +931,8 @@ MonoBehaviour:
   selectKey: 101
   backKey: 27
   crouchKey: 99
+  cycleToPreviousKey: 51
+  cycleToNextKey: 52
   jumpButton: 
   dropButton: 
   moveTypeButton: 
@@ -920,6 +942,8 @@ MonoBehaviour:
   selectButton: 
   backButton: 
   crouchButton: 
+  cycleToPreviousItemButton: 
+  cycleToNextItemButton: 
 --- !u!114 &8516478148929039539
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1023,35 +1047,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <MaxHealth>k__BackingField: 100
---- !u!114 &5282165639278203864
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5461086701115480959}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7775ec3943d9d64589c6ab5252cd094, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableGlide: 0
-  _floatObject: {fileID: 7381148350791537148}
-  groundCheckRadius: 0.7
-  groundCheckDistance: 2
-  groundCheckOffset: {x: 0, y: 0.15, z: 0.07}
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 1
-  _velocityVector: {x: 0, y: 0, z: 0}
-  _parachuteDrag: 0.1
-  _rotationSpeed: 180
-  _fallSpeed: -0.2
-  glideInput: 32
-  glideReleaseInput: 32
-  glideInputButton: 
-  glideReleaseInputButton: 
---- !u!114 &7785224735817522124
+  canBeDamagedBy: 0
+--- !u!114 &1082787242347922377
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1060,7 +1057,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 5461086701115480959}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c91d8bece9c2f084db83af231007d2be, type: 3}
+  m_Script: {fileID: 11500000, guid: a978c4e7a88e5df47ab760066ad4fd5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boneMappings: []
+--- !u!114 &2389188036522252333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5461086701115480959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5edd704b17ea7224089215f2d26f194a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   enableGlide: 1
@@ -1076,6 +1086,15 @@ MonoBehaviour:
   _rotationSpeed: 180
   _fallSpeed: -0.2
   _animator: {fileID: 0}
+  flightProfile: {fileID: 0}
+  _forwardMomentumCost: 1.2
+  _pitchDampening: 3
+  _rollDampening: 3
+  _turnSpeed: 2.5
+  _maxRollAngle: 40
+  _speedBoostFromPitch: 5
+  _liftFromPitch: 2
+  _maxGlideSpeed: 25
   legSwayFactor: 50
   legRigidbodies: []
 --- !u!1 &5464243126050064263

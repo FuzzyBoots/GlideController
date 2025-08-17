@@ -93,6 +93,7 @@ namespace FS_Core
         /// </summary>
         public GameObject CopyComponentsAndAnimControllerFromPrefab(string prefabName, AnimatorMergerUtility animatorMergerUtility, GameObject characterObject)
         {
+            Debug.Log("Running CopyComponentsAndAnimControllerFromPrefab for " + prefabName);
             if (!string.IsNullOrEmpty(prefabName))
             {
                 // Load the prefab from Resources

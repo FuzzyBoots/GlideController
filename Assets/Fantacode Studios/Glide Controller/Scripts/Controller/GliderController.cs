@@ -12,13 +12,13 @@ namespace SD_GlidingSystem
         {
             get
             {
-                return (equippableItemController?.EquippedItem is GliderItem gliderData)
+                return (itemEquipper?.EquippedItem is GliderItem gliderData)
                     ? gliderData
                     : null;
             }
         }
 
-        public GliderObject CurrentGlider => equippableItemController.EquippedItemObject as GliderObject;
+        public GliderObject CurrentGlider => itemEquipper?.EquippedItemObject as GliderObject;
 
         [Tooltip("Enables or disables the glide feature.")]
         public bool enableGlide = true;
@@ -34,7 +34,7 @@ namespace SD_GlidingSystem
         LocomotionInputManager locomotionInput;
         CharacterController characterController;
         LocomotionController locomotionController;
-        ItemEquipper equippableItemController;
+        ItemEquipper itemEquipper;
 
         [Header("Ground Check Settings")]
         [Tooltip("Radius of ground detection sphere")]
@@ -105,6 +105,10 @@ namespace SD_GlidingSystem
             playerController = GetComponent<PlayerController>();
             characterController = GetComponent<CharacterController>();
             locomotionController = GetComponent<LocomotionController>();
+            itemEquipper = GetComponent<ItemEquipper>();
+
+            itemEquipper.OnEquip += EquipItem;
+            itemEquipper.OnUnEquip += UnEquipItem;
 
             _animator = GetComponent<Animator>();
 
@@ -112,7 +116,7 @@ namespace SD_GlidingSystem
         }
 
         public void Update()
-        {
+        { 
             //#if inputsystem
             //            GlideInputHolding = input.Gliding.Gliding.inProgress;
             //#else
@@ -120,11 +124,6 @@ namespace SD_GlidingSystem
             //#endif
 
             GlideInputHolding = Input.GetKeyDown(KeyCode.Space);
-        }
-
-        public override void HandleUpdate()
-        {
-            base.HandleUpdate();
 
             if (playerController.IsInAir && GlideInputHolding)
             {
@@ -146,6 +145,14 @@ namespace SD_GlidingSystem
             {
                 StartCoroutine(HandleLandingMomentum());
             }
+        }
+
+        public override void HandleUpdate()
+        {
+            Debug.Log("In HandleUpdate");
+            base.HandleUpdate();
+
+            
         }
 
         private void HandleGlidingMovement()
@@ -234,7 +241,7 @@ namespace SD_GlidingSystem
 
             player.OnStartSystem(this);
             _animator.CrossFadeInFixedTime("Hanging Idle", 0.1f);
-            _floatObject.SetActive(true);
+            // _floatObject.SetActive(true);
         }
 
         private bool HighEnough()
@@ -282,7 +289,7 @@ namespace SD_GlidingSystem
             if (!InAction) { yield return null; }
             Debug.Log($"StopGliding");
             InAction = false;
-            _floatObject.SetActive(false);
+            // _floatObject.SetActive(false);
             Debug.Log("Setting Gliding to false");
             _animator.SetBool("Gliding", false);
 
@@ -399,6 +406,7 @@ namespace SD_GlidingSystem
 
         public void EquipItem(EquippableItem itemdata)
         {
+            Debug.Log("Entering EquipItem for " + itemdata.name);
             if (itemdata is GliderItem)
             {
                 enableGlide = true;
