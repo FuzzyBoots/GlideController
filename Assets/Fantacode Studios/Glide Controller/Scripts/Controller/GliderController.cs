@@ -143,7 +143,8 @@ namespace SD_GlidingSystem
             }
             else if (InAction && !HighEnough())
             {
-                StartCoroutine(HandleLandingMomentum());
+                //StartCoroutine(HandleLandingMomentum());
+                StartCoroutine(StopGliding());
             }
         }
 
@@ -236,12 +237,12 @@ namespace SD_GlidingSystem
             InAction = true;
 
             _animator.SetBool("Gliding", true);
+            // Debug.Break();
 
             _velocityVector = characterController.velocity;
 
             player.OnStartSystem(this);
             _animator.CrossFadeInFixedTime("Hanging Idle", 0.1f);
-            // _floatObject.SetActive(true);
         }
 
         private bool HighEnough()
@@ -292,6 +293,7 @@ namespace SD_GlidingSystem
             // _floatObject.SetActive(false);
             Debug.Log("Setting Gliding to false");
             _animator.SetBool("Gliding", false);
+            // Debug.Break();
 
             // Call the new coroutine to handle leveling out the character
             StartCoroutine(LevelOutRotation());
@@ -308,42 +310,6 @@ namespace SD_GlidingSystem
             {
                 StartCoroutine(StopGliding());
             }
-        }
-
-        IEnumerator SetRotation(Vector3 lookDir, float rotateSpeed)
-        {
-            var dir = Quaternion.LookRotation(lookDir);
-            while (Quaternion.Angle(transform.rotation, dir) > .1f)
-            {
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, dir, rotateSpeed * Time.deltaTime * 50);
-                yield return null;
-            }
-            transform.rotation = dir;
-        }
-
-        IEnumerator CrossFadeAsync(string anim, float crossFadeTime = .2f, bool enableRootmotion = false, Action onComplete = null)
-        {
-            Debug.Log($"Fading to {anim}");
-            if (enableRootmotion)
-                EnableRootMotion();
-            _animator.CrossFadeInFixedTime(anim, crossFadeTime);
-            yield return null;
-            while (_animator.IsInTransition(0))
-            {
-                yield return null;
-            }
-            var animState = _animator.GetCurrentAnimatorStateInfo(0);
-
-            float timer = 0f;
-
-            while (timer <= animState.length)
-            {
-                timer += Time.deltaTime * _animator.speed;
-                yield return null;
-            }
-            if (enableRootmotion)
-                ResetRootMotion();
-            onComplete?.Invoke();
         }
 
         #region rootmotion
@@ -372,13 +338,37 @@ namespace SD_GlidingSystem
 
         #region Landing
 
+        IEnumerator CrossFadeAsync(string anim, float crossFadeTime = .2f, bool enableRootmotion = false, Action onComplete = null)
+        {
+            if (enableRootmotion)
+                EnableRootMotion();
+            _animator.CrossFadeInFixedTime(anim, crossFadeTime);
+            yield return null;
+            //while (animator.IsInTransition(0))
+            //{
+            //    yield return null;
+            //}
+            var animState = _animator.GetNextAnimatorStateInfo(0);
+
+            float timer = 0f;
+
+            while (timer <= animState.length)
+            {
+                timer += Time.deltaTime * _animator.speed;
+                yield return null;
+            }
+            if (enableRootmotion)
+                ResetRootMotion();
+            onComplete?.Invoke();
+        }
+
         private IEnumerator HandleLandingMomentum()
         {
             Debug.Log("Calling HandleLandingMomentum");
             InAction = false;
-
-            // Play landing animation
-            StartCoroutine(CrossFadeAsync("DropFallIdle", .2f, false));
+            _animator.SetBool("Gliding", false);
+            StartCoroutine(CrossFadeAsync(AnimationNames.FallTree, .2f, false));
+            StartCoroutine(LevelOutRotation());
 
             // Calculate the velocity required for the jump landing.
             float ySpeed = _velocityVector.y;
@@ -398,8 +388,39 @@ namespace SD_GlidingSystem
 
         private bool CheckGround(Vector3 position)
         {
+            Debug.DrawRay(position + groundCheckOffset, Vector3.down, Color.red);
             return Physics.SphereCast(position + groundCheckOffset, groundCheckRadius, Vector3.down, out _, groundCheckDistance, groundLayer);
         }
+
+        // Add this method to the same script to visualize the SphereCast
+        private void OnDrawGizmos()
+        {
+            Debug.Log("Drawing Gizmos...");
+            // --- Visualize the SphereCast ---
+            Vector3 startPoint = transform.position + groundCheckOffset;
+            Vector3 endPoint = startPoint + Vector3.down * groundCheckDistance;
+
+            // Check if the cast hits anything to change the gizmo's color
+            bool isHit = Physics.SphereCast(startPoint, groundCheckRadius, Vector3.down, out RaycastHit hitInfo, groundCheckDistance, groundLayer);
+
+            // Set the color based on hit status
+            Gizmos.color = isHit ? Color.green : Color.red;
+
+            // Draw the starting and ending spheres of the cast
+            Gizmos.DrawWireSphere(startPoint, groundCheckRadius);
+            Gizmos.DrawWireSphere(endPoint, groundCheckRadius);
+
+            // Draw a line connecting the centers of the two spheres
+            Gizmos.DrawLine(startPoint, endPoint);
+
+            // If the cast hit something, draw a solid sphere at the exact point of contact
+            if (isHit)
+            {
+                Vector3 hitCenter = startPoint + Vector3.down * hitInfo.distance;
+                Gizmos.DrawSphere(hitCenter, groundCheckRadius);
+            }
+        }
+
 
         #endregion
         #region Equip And UnEquip

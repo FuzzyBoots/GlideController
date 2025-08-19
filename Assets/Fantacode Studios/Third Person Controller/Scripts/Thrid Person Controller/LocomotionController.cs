@@ -1157,6 +1157,7 @@ namespace FS_ThirdPerson
         public void GroundCheck()
         {
             isGrounded = CheckIsGrounded();
+            Debug.Log("Ran GroundCheck in Locomotion Controller and it's " + isGrounded);
             animator.SetBool(AnimatorParameters.IsGrounded, isGrounded);
         }
 
